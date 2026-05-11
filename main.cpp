@@ -3,6 +3,7 @@
 #include <string>
 #include <stdexcept>
 #include <filesystem>
+#include <algorithm>
 
 #include "GopherServer.h"
 #include "GeminiServer.h"
@@ -49,12 +50,17 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    bool use_tls = false;
+    for (int i = 1; i < argc; i++) {
+        if (std::string(argv[i]) == "--tls") use_tls = true;
+    }
+
     try {
         if (proto == "gopher") {
             GopherServer server(port, root);
             server.run();
         } else {
-            GeminiServer server(port, root);
+            GeminiServer server(port, root, use_tls);  // añadir use_tls
             server.run();
         }
     } catch (const std::exception& e) {

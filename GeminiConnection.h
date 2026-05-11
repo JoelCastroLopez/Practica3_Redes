@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <openssl/ssl.h>
 
 // ======================================================================
 // Conexión Gemini individual
@@ -13,7 +14,7 @@
 //=======================================================================
 class GeminiConnection {
 public:
-    GeminiConnection(int fd, const std::string& root);
+     GeminiConnection(int fd, const std::string& root, SSL* ssl = nullptr);
     void handle();
 
 private:
@@ -29,4 +30,5 @@ private:
 
     int fd_;
     std::string root_;
+    SSL* ssl_;
 };

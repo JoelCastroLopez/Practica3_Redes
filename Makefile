@@ -6,7 +6,7 @@ SRCS     = main.cpp ProtocolServer.cpp \
            GeminiServer.cpp GeminiConnection.cpp
 
 $(TARGET): $(SRCS)
-	$(CXX) $(CXXFLAGS) -o $(TARGET) $(SRCS)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(SRCS) -lssl -lcrypto
 
 clean:
 	rm -f $(TARGET)

@@ -15,8 +15,8 @@
 #include <dirent.h>
 #include <fcntl.h>
 
-GeminiConnection::GeminiConnection(int fd, const std::string& root)
-    : fd_(fd), root_(root) {}
+GeminiConnection::GeminiConnection(int fd, const std::string& root, SSL* ssl)
+    : fd_(fd), root_(root), ssl_(ssl) {}
 
 // handle() — punto de entrada para esta conexión
 void GeminiConnection::handle() {
@@ -54,7 +54,7 @@ std::string GeminiConnection::read_url() {
     std::string buf;
     char c;
     while (buf.size() < 1024) {
-        int n = recv(fd_, &c, 1, 0);
+        int n = net_recv(&c, 1);
         if (n <= 0) break;
         if (c == '\n') break;
         if (c != '\r') buf += c;
@@ -74,14 +74,14 @@ std::string GeminiConnection::parse_url_path(const std::string& url) {
     const std::string prefix = "gemini://";
     if (url.substr(0, prefix.size()) != prefix)
         return "";                          // URL inválida
-
+ 
     // Buscar la primera '/' después del host
     size_t host_start = prefix.size();
     size_t slash = url.find('/', host_start);
-
+ 
     if (slash == std::string::npos)
         return "/";                         // sin ruta → raíz
-
+ 
     std::string path = url.substr(slash);   // incluye la '/' inicial
     if (path.empty()) path = "/";
     return path;
@@ -91,7 +91,7 @@ std::string GeminiConnection::parse_url_path(const std::string& url) {
 // Helper — send_status: Envía una línea de estado Gemini:  "<código> <meta>\r\n"
 void GeminiConnection::send_status(int code, const std::string& meta) {
     std::string line = std::to_string(code) + " " + meta + "\r\n";
-    send(fd_, line.c_str(), line.size(), 0);
+    net_send(line.c_str(), line.size());
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -105,19 +105,19 @@ void GeminiConnection::send_file(const std::string& path) {
         send_status(40, "Temporary Failure");
         return;
     }
-
+ 
     // Determinar MIME por extensión
     std::string mime = mime_for(path);
-
+ 
     // Enviar cabecera de éxito
     send_status(20, mime);
-
+ 
     // Enviar contenido del fichero en bloques
     char buf[4096];
     ssize_t n;
     while ((n = read(file_fd, buf, sizeof(buf))) > 0)
-        send(fd_, buf, n, 0);
-
+        net_send(buf, n);
+ 
     close(file_fd);
 }
 
@@ -135,7 +135,7 @@ void GeminiConnection::send_directory(const std::string& path,
         send_status(40, "Temporary Failure");
         return;
     }
-
+ 
     // Recoger entradas
     std::vector<std::string> dirs, files;
     struct dirent* entry;
@@ -153,22 +153,32 @@ void GeminiConnection::send_directory(const std::string& path,
     closedir(dir);
     std::sort(dirs.begin(),  dirs.end());
     std::sort(files.begin(), files.end());
-
+ 
     // Enviar cabecera
     send_status(20, "text/gemini");
-
+ 
     // Normalizar base de la ruta para construir enlaces
     std::string base = url_path;
     if (base.empty() || base.back() != '/') base += '/';
-
+ 
     // Construir cuerpo gemtext
     std::string body = "# Directory Listing\r\n\r\n";
-
+ 
     for (auto& d : dirs)
         body += "=> " + base + d + "/  " + d + "/\r\n";
-
+ 
     for (auto& f : files)
         body += "=> " + base + f + "  " + f + "\r\n";
+ 
+    net_send(body.c_str(), body.size());
+}
 
-    send(fd_, body.c_str(), body.size(), 0);
+ssize_t GeminiConnection::net_recv(char* buf, size_t len) {
+    if (ssl_) return SSL_read(ssl_, buf, len);
+    return recv(fd_, buf, len, 0);
+}
+
+ssize_t GeminiConnection::net_send(const char* buf, size_t len) {
+    if (ssl_) return SSL_write(ssl_, buf, len);
+    return send(fd_, buf, len, 0);
 }
