@@ -1,15 +1,24 @@
-#pragma once
+#ifndef GEMINISERVER_H
+#define GEMINISERVER_H
+
 #include "ProtocolServer.h"
-#include <string>
+#include <pthread.h>
+#include <list>
+
+class GeminiConnection;
 
 class GeminiServer : public ProtocolServer {
-    public:
-        GeminiServer(int port, const std::string& root, bool tls = false);
+public:
+    GeminiServer(int port = 0, bool use_tls = false);
+    ~GeminiServer();
 
-    protected:
-        void handle_client(int client_fd) override;
+    void run() override;
+    
+    bool is_using_tls() const { return use_tls; }
 
-    private:
-        bool tls_;
-        void* ssl_ctx_;
+private:
+    bool use_tls;
+    std::list<GeminiConnection*> connection_list;
 };
+
+#endif

@@ -1,184 +1,289 @@
+//****************************************************************************
+//                         REDES Y SISTEMAS DISTRIBUIDOS
+//                      
+//                     2º de grado de Ingeniería Informática
+//                       
+//                   Gemini Protocol Connection Handler
+// 
+//****************************************************************************
+
+#include <cstring>
+#include <unistd.h>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
 #include "GeminiConnection.h"
+#include <sys/socket.h>
 #include "common.h"
 
-#include <cstdio>
-#include <cstring>
-#include <cerrno>
-#include <string>
-#include <vector>
-#include <algorithm>
-
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <dirent.h>
-#include <fcntl.h>
-
-GeminiConnection::GeminiConnection(int fd, const std::string& root, SSL* ssl)
-    : fd_(fd), root_(root), ssl_(ssl) {}
-
-// handle() — punto de entrada para esta conexión
-void GeminiConnection::handle() {
-    std::string url      = read_url();
-    std::string url_path = parse_url_path(url);
-
-    // Validar la URL
-    if (url_path.empty() || !is_safe_path(url_path)) {
-        send_status(59, "Bad Request");
-        return;
-    }
-
-    std::string fs_path = root_ + url_path;
-    // Normalizar: quitar barra final excepto en "/"
-    if (fs_path.size() > root_.size() + 1 && fs_path.back() == '/')
-        fs_path.pop_back();
-
-    struct stat st;
-    if (stat(fs_path.c_str(), &st) < 0) {
-        send_status(51, "Not Found");
-        return;
-    }
-
-    if (S_ISDIR(st.st_mode))
-        send_directory(fs_path, url_path);
-    else
-        send_file(fs_path);
+// Helpers that transparently use TLS or plain socket
+static int ssl_send(void *tls, int fd, const char *buf, size_t len) {
+    if (tls)
+        return SSL_write(reinterpret_cast<SSL *>(tls), buf, static_cast<int>(len));
+    return static_cast<int>(::send(fd, buf, len, 0));
 }
 
-// ════════════════════════════════════════════════════════════════════════
-// NIVEL 4 — read_url
-//   Lee bytes hasta \r\n. Máximo 1024 bytes (spec Gemini).
-// ════════════════════════════════════════════════════════════════════════
+static int ssl_recv(void *tls, int fd, char *buf, size_t len) {
+    if (tls)
+        return SSL_read(reinterpret_cast<SSL *>(tls), buf, static_cast<int>(len));
+    return static_cast<int>(::recv(fd, buf, len, 0));
+}
+
+GeminiConnection::GeminiConnection(int socket, bool use_tls)
+    : socket_fd(socket), use_tls(use_tls), tls_context(nullptr) {
+
+    // TODO (OPTIONAL - ADVANCED): Initialize TLS context if use_tls is true
+    // This requires OpenSSL library
+    if (!use_tls) return;
+
+    // Create a new SSL context using the server-side TLS method
+    SSL_CTX *ctx = SSL_CTX_new(TLS_server_method());
+    if (!ctx) {
+        std::cerr << "SSL_CTX_new failed: " << ERR_error_string(ERR_get_error(), nullptr) << std::endl;
+        return;
+    }
+
+    // Load the server certificate (cert.pem) and private key (key.pem)
+    // These files must exist in the working directory (generated with openssl req -x509 ...)
+    if (SSL_CTX_use_certificate_file(ctx, "cert.pem", SSL_FILETYPE_PEM) <= 0) {
+        std::cerr << "SSL_CTX_use_certificate_file failed: " << ERR_error_string(ERR_get_error(), nullptr) << std::endl;
+        SSL_CTX_free(ctx);
+        return;
+    }
+    if (SSL_CTX_use_PrivateKey_file(ctx, "key.pem", SSL_FILETYPE_PEM) <= 0) {
+        std::cerr << "SSL_CTX_use_PrivateKey_file failed: " << ERR_error_string(ERR_get_error(), nullptr) << std::endl;
+        SSL_CTX_free(ctx);
+        return;
+    }
+
+    // Create an SSL object and associate it with the accepted socket
+    SSL *ssl = SSL_new(ctx);
+    if (!ssl) {
+        std::cerr << "SSL_new failed" << std::endl;
+        SSL_CTX_free(ctx);
+        return;
+    }
+    SSL_set_fd(ssl, socket_fd);
+
+    // Perform the TLS handshake (server side)
+    if (SSL_accept(ssl) <= 0) {
+        std::cerr << "SSL_accept failed: " << ERR_error_string(ERR_get_error(), nullptr) << std::endl;
+        SSL_free(ssl);
+        SSL_CTX_free(ctx);
+        return;
+    }
+
+    // Store the SSL object in tls_context; SSL_CTX is retrievable via SSL_get_SSL_CTX()
+    tls_context = ssl;
+}
+
+GeminiConnection::~GeminiConnection() {
+    // TODO (OPTIONAL - ADVANCED): Clean up TLS context if it was initialized
+    if (tls_context) {
+        SSL *ssl = reinterpret_cast<SSL *>(tls_context);
+        // Retrieve the SSL_CTX before freeing ssl (it's reference-counted separately)
+        SSL_CTX *ctx = SSL_get_SSL_CTX(ssl);
+        // Send TLS close_notify alert and free the SSL object
+        SSL_shutdown(ssl);
+        SSL_free(ssl);
+        // Free the SSL context (created in the constructor)
+        SSL_CTX_free(ctx);
+        tls_context = nullptr;
+    }
+
+    close(socket_fd);
+}
+
+// TODO: Students must implement this function
+// Read the URL from the client
+// Format: <URL><CR><LF>
+// Maximum URL size is MAX_URL_SIZE (1024 bytes)
+// Returns the URL string (without CR+LF)
 std::string GeminiConnection::read_url() {
-    std::string buf;
-    char c;
-    while (buf.size() < 1024) {
-        int n = net_recv(&c, 1);
-        if (n <= 0) break;
-        if (c == '\n') break;
-        if (c != '\r') buf += c;
+    char buf[MAX_URL_SIZE + 2];
+    int total = 0;
+
+    // TODO: Read from socket_fd until \r\n is found
+    // Uses SSL_read when TLS is active, recv otherwise
+    while (total < MAX_URL_SIZE) {
+        char c;
+        int n = ssl_recv(tls_context, socket_fd, &c, 1);
+        if (n <= 0) break;      // error or connection closed
+        if (c == '\n') break;   // end of URL line
+        buf[total++] = c;
     }
-    return buf;
+
+    // TODO: Return the URL string (without \r\n)
+    // Strip trailing \r if present
+    if (total > 0 && buf[total - 1] == '\r')
+        total--;
+
+    // TODO: Validate URL length (must be <= 1024 bytes)
+    // TODO: Handle errors and buffer overflow
+    // If total == MAX_URL_SIZE the URL was truncated; handle_request() checks the length
+    return std::string(buf, total);
 }
 
-// ════════════════════════════════════════════════════════════════════════
-// NIVEL 4 — parse_url_path
-//   De "gemini://localhost:1965/docs/file.gmi" extrae "/docs/file.gmi".
-//   Pasos:
-//     1. Verificar que empieza por "gemini://"
-//     2. Saltar host (y puerto opcional)
-//     3. Devolver lo que queda (la ruta)
-// ════════════════════════════════════════════════════════════════════════
+// TODO: Students must implement this function
+// Parse a Gemini URL and extract the path component
+// Format: gemini://hostname[:port]/path
+// Example: "gemini://localhost/index.gmi" -> "/index.gmi"
+// Example: "gemini://example.com:1965/docs/file.txt" -> "/docs/file.txt"
 std::string GeminiConnection::parse_url_path(const std::string& url) {
     const std::string prefix = "gemini://";
-    if (url.substr(0, prefix.size()) != prefix)
-        return "";                          // URL inválida
- 
-    // Buscar la primera '/' después del host
-    size_t host_start = prefix.size();
-    size_t slash = url.find('/', host_start);
- 
-    if (slash == std::string::npos)
-        return "/";                         // sin ruta → raíz
- 
-    std::string path = url.substr(slash);   // incluye la '/' inicial
+
+    // TODO: Check if URL starts with "gemini://"
+    if (url.compare(0, prefix.length(), prefix) != 0)
+        return "/";
+
+    // TODO: Find the first "/" after the hostname
+    size_t path_start = url.find('/', prefix.length());
+
+    // TODO: If no path, return "/"
+    if (path_start == std::string::npos)
+        return "/";
+
+    // TODO: Extract and return the path
+    std::string path = url.substr(path_start);
     if (path.empty()) path = "/";
+
+    // TODO: Validate the path using is_safe_path()
+    if (!is_safe_path(path))
+        return "";
+
     return path;
 }
 
-
-// Helper — send_status: Envía una línea de estado Gemini:  "<código> <meta>\r\n"
-void GeminiConnection::send_status(int code, const std::string& meta) {
-    std::string line = std::to_string(code) + " " + meta + "\r\n";
-    net_send(line.c_str(), line.size());
+// Send a Gemini response header
+// Format: <STATUS><SPACE><META><CR><LF>
+// Example: "20 text/gemini\r\n"
+void GeminiConnection::send_header(int status, const std::string& meta) {
+    std::ostringstream header;
+    header << status << " " << meta << "\r\n";
+    std::string header_str = header.str();
+    
+    // TODO (OPTIONAL): If using TLS, send via TLS — handled transparently by ssl_send()
+    ssl_send(tls_context, socket_fd, header_str.c_str(), header_str.length());
 }
 
-// ════════════════════════════════════════════════════════════════════════
-// NIVEL 5 — send_file
-//   1. Enviar línea de estado:  "20 <mime-type>\r\n"
-//   2. Enviar contenido del fichero
-// ════════════════════════════════════════════════════════════════════════
+// TODO: Students must implement this function
+// Send a file to the client with appropriate Gemini header
 void GeminiConnection::send_file(const std::string& path) {
-    int file_fd = open(path.c_str(), O_RDONLY);
-    if (file_fd < 0) {
-        send_status(40, "Temporary Failure");
+    // TODO: Open the file
+    std::ifstream file(path, std::ios::binary);
+    if (!file.is_open()) {
+        send_header(GeminiStatus::NOT_FOUND, "File not found");
         return;
     }
- 
-    // Determinar MIME por extensión
-    std::string mime = mime_for(path);
- 
-    // Enviar cabecera de éxito
-    send_status(20, mime);
- 
-    // Enviar contenido del fichero en bloques
+
+    // TODO: Get MIME type using get_mime_type()
+    std::string mime = get_mime_type(path);
+
+    // TODO: Send header: "20 <mime_type>\r\n"
+    send_header(GeminiStatus::SUCCESS, mime);
+
+    // TODO: Read file in chunks and send via socket
+    // Uses SSL_write when TLS is active, send otherwise
     char buf[4096];
-    ssize_t n;
-    while ((n = read(file_fd, buf, sizeof(buf))) > 0)
-        net_send(buf, n);
- 
-    close(file_fd);
+    while (file.read(buf, sizeof(buf)) || file.gcount() > 0) {
+        std::streamsize n = file.gcount();
+        // TODO: Handle errors (file not found, read errors, etc.)
+        if (ssl_send(tls_context, socket_fd, buf, static_cast<size_t>(n)) < 0)
+            break;
+    }
+
+    // TODO: Close file when done
+    file.close();
 }
 
-// ════════════════════════════════════════════════════════════════════════
-// NIVEL 5 — send_directory
-//   Genera un listado en formato Gemtext:
-//     # Directory Listing
-//     => /ruta/fichero.txt fichero.txt
-//     => /ruta/subdir/    subdir/
-// ════════════════════════════════════════════════════════════════════════
-void GeminiConnection::send_directory(const std::string& path,
-                                      const std::string& url_path) {
-    DIR* dir = opendir(path.c_str());
-    if (!dir) {
-        send_status(40, "Temporary Failure");
-        return;
-    }
- 
-    // Recoger entradas
-    std::vector<std::string> dirs, files;
-    struct dirent* entry;
+// TODO: Students must implement this function
+// Send a directory listing in gemtext format
+// Gemtext format for links: "=> <URL> <DISPLAY_TEXT>"
+// Example: "=> /docs/file.txt File.txt"
+void GeminiConnection::send_directory(const std::string& path) {
+    // TODO: Send header: "20 text/gemini\r\n"
+    send_header(GeminiStatus::SUCCESS, "text/gemini");
+
+    // TODO: Send title: "# Directory listing\n\n"
+    std::string title = "# Directory Listing\n\n";
+    ssl_send(tls_context, socket_fd, title.c_str(), title.length());
+
+    // TODO: Open directory using opendir()
+    DIR *dir = opendir(path.c_str());
+    if (!dir) return;
+
+    // Base URL path: "." → "", "./docs" → "/docs"
+    std::string base = (path == ".") ? "" : path.substr(1);
+
+    // TODO: Read directory entries using readdir()
+    struct dirent *entry;
     while ((entry = readdir(dir)) != nullptr) {
         std::string name = entry->d_name;
+
+        // TODO: For each entry — Skip "." and ".."
         if (name == "." || name == "..") continue;
-        std::string full = path + "/" + name;
-        struct stat st;
-        if (stat(full.c_str(), &st) < 0) continue;
-        if (S_ISDIR(st.st_mode))
-            dirs.push_back(name);
-        else
-            files.push_back(name);
+
+        std::string full_path = path + "/" + name;
+        bool is_dir = is_directory(full_path);
+
+        // TODO: Add "/" suffix for directories
+        std::string url_path = base + "/" + name + (is_dir ? "/" : "");
+        std::string display  = name + (is_dir ? "/" : "");
+
+        // TODO: Format as gemtext link: "=> /<path>/<name> <name>\n"
+        std::string line = "=> " + url_path + " " + display + "\n";
+
+        // TODO: Send line to client
+        ssl_send(tls_context, socket_fd, line.c_str(), line.length());
     }
+
+    // TODO: Close directory
     closedir(dir);
-    std::sort(dirs.begin(),  dirs.end());
-    std::sort(files.begin(), files.end());
- 
-    // Enviar cabecera
-    send_status(20, "text/gemini");
- 
-    // Normalizar base de la ruta para construir enlaces
-    std::string base = url_path;
-    if (base.empty() || base.back() != '/') base += '/';
- 
-    // Construir cuerpo gemtext
-    std::string body = "# Directory Listing\r\n\r\n";
- 
-    for (auto& d : dirs)
-        body += "=> " + base + d + "/  " + d + "/\r\n";
- 
-    for (auto& f : files)
-        body += "=> " + base + f + "  " + f + "\r\n";
- 
-    net_send(body.c_str(), body.size());
 }
 
-ssize_t GeminiConnection::net_recv(char* buf, size_t len) {
-    if (ssl_) return SSL_read(ssl_, buf, len);
-    return recv(fd_, buf, len, 0);
+// Convert filesystem path to URL path
+std::string GeminiConnection::path_to_url(const std::string& path) {
+    // Simple implementation: just ensure it starts with /
+    if (path.empty() || path[0] != '/') {
+        return "/" + path;
+    }
+    return path;
 }
 
-ssize_t GeminiConnection::net_send(const char* buf, size_t len) {
-    if (ssl_) return SSL_write(ssl_, buf, len);
-    return send(fd_, buf, len, 0);
+// Main request handler
+void GeminiConnection::handle_request() {
+    // Read the URL from the client
+    std::string url = read_url();
+    
+    // Check URL length (Gemini spec: max 1024 bytes)
+    if (url.length() > MAX_URL_SIZE) {
+        send_header(GeminiStatus::BAD_REQUEST, "URL too long");
+        return;
+    }
+    
+    // Parse the URL to get the path
+    std::string path = parse_url_path(url);
+    
+    // Validate the path
+    if (!is_safe_path(path)) {
+        send_header(GeminiStatus::BAD_REQUEST, "Invalid path");
+        return;
+    }
+    
+    // Convert to filesystem path (prepend current directory)
+    std::string fs_path = "." + path;
+    
+    // Check if path exists and determine type
+    if (is_directory(fs_path)) {
+        send_directory(fs_path);
+    } else if (is_regular_file(fs_path)) {
+        send_file(fs_path);
+    } else {
+        send_header(GeminiStatus::NOT_FOUND, "Not found");
+    }
 }
+

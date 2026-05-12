@@ -1,15 +1,21 @@
-#pragma once
+#ifndef GOPHERSERVER_H
+#define GOPHERSERVER_H
+
 #include "ProtocolServer.h"
-#include <string>
+#include <pthread.h>
+#include <list>
+
+class GopherConnection;
 
 class GopherServer : public ProtocolServer {
 public:
-    GopherServer(int port, const std::string& root,
-                 const std::string& host = "localhost");
+    GopherServer(int port = 0);
+    ~GopherServer();
 
-protected:
-    void handle_client(int client_fd) override;
+    void run() override;
 
 private:
-    std::string host_;
+    std::list<GopherConnection*> connection_list;
 };
+
+#endif

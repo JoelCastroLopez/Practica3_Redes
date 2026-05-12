@@ -1,44 +1,80 @@
+//****************************************************************************
+//                         REDES Y SISTEMAS DISTRIBUIDOS
+//                      
+//                     2º de grado de Ingeniería Informática
+//                       
+//                        Gemini Protocol Server
+//                        gemini://gemini.circumlunar.space/docs/specification.gmi
+// 
+//****************************************************************************
+
+#include <cerrno>
+#include <cstring>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <iostream>
+#include "common.h"
 #include "GeminiServer.h"
 #include "GeminiConnection.h"
-#include <openssl/ssl.h>
-#include <openssl/err.h>
-#include <cstdio>
 
-GeminiServer::GeminiServer(int port, const std::string& root, bool tls)
-    : ProtocolServer(port, root), tls_(tls), ssl_ctx_(nullptr) {
-
-    if (tls_) {
-        SSL_CTX* ctx = SSL_CTX_new(TLS_server_method());
-        if (!ctx) { ERR_print_errors_fp(stderr); exit(1); }
-
-        if (SSL_CTX_use_certificate_file(ctx, "cert.pem", SSL_FILETYPE_PEM) <= 0) {
-            fprintf(stderr, "ERROR: no se encuentra cert.pem\n");
-            ERR_print_errors_fp(stderr); exit(1);
-        }
-        if (SSL_CTX_use_PrivateKey_file(ctx, "key.pem", SSL_FILETYPE_PEM) <= 0) {
-            fprintf(stderr, "ERROR: no se encuentra key.pem\n");
-            ERR_print_errors_fp(stderr); exit(1);
-        }
-        ssl_ctx_ = ctx;
-    }
+// Thread function for handling client connections
+void *run_gemini_connection(void *c) {
+    GeminiConnection *connection = (GeminiConnection *) c;
+    connection->handle_request();
+    delete connection;
+    return nullptr;
 }
 
-void GeminiServer::handle_client(int client_fd) {
-    if (tls_) {
-        SSL* ssl = SSL_new((SSL_CTX*)ssl_ctx_);
-        SSL_set_fd(ssl, client_fd);
+GeminiServer::GeminiServer(int port, bool use_tls) 
+    : ProtocolServer(port), use_tls(use_tls) {
+}
 
-        if (SSL_accept(ssl) <= 0) {
-            ERR_print_errors_fp(stderr);
-            SSL_free(ssl);
-            return;
-        }
-        GeminiConnection conn(client_fd, root_, ssl);  // pasar ssl
-        conn.handle();
-        SSL_shutdown(ssl);
-        SSL_free(ssl);
+GeminiServer::~GeminiServer() {
+    stop();
+}
+
+void GeminiServer::run() {
+    struct sockaddr_in client_addr;
+    int client_socket;
+    socklen_t addr_len = sizeof(client_addr);
+    
+    // Create and bind the socket
+    std::pair<int, int> result = define_socket_TCP(port);
+    msock = result.first;
+    port = result.second;
+    
+    if (msock < 0) {
+        errexit("Failed to create socket\n");
+    }
+
+    std::cout << "Gemini server listening";
+
+    if (use_tls) {
+        std::cout << " (TLS enabled)";
     } else {
-        GeminiConnection conn(client_fd, root_, nullptr);
-        conn.handle();
+        std::cout << " (TLS disabled - for testing only)";
+    }
+    std::cout << " port = " << port << std::endl;
+
+    // Accept loop
+    while (!should_stop) {
+        client_socket = accept(msock, (struct sockaddr *) &client_addr, &addr_len);
+        
+        if (client_socket < 0) {
+            if (should_stop) break;
+            std::cerr << "Accept failed: " << strerror(errno) << std::endl;
+            continue;
+        }
+        
+        // Create a new connection handler
+        auto *connection = new GeminiConnection(client_socket, use_tls);
+        
+        // Create a thread to handle this connection
+        pthread_t thread;
+        pthread_create(&thread, nullptr, run_gemini_connection, (void *) connection);
+        pthread_detach(thread);  // Detach so thread cleans up automatically
     }
 }

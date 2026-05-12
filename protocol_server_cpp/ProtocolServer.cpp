@@ -1,87 +1,74 @@
-#include "ProtocolServer.h"
+//****************************************************************************
+//                         REDES Y SISTEMAS DISTRIBUIDOS
+//                      
+//                     2º de grado de Ingeniería Informática
+//                       
+//                   Base class for protocol servers
+// 
+//****************************************************************************
 
-#include <cstring>
 #include <cerrno>
-#include <cstdio>
-#include <stdexcept>
-
+#include <cstring>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include <sys/wait.h>
+#include <iostream>
+#include "common.h"
+#include "ProtocolServer.h"
 
-ProtocolServer::ProtocolServer(int port, const std::string& root)
-    : port_(port), root_(root) {}
+// TODO: Students must implement this function
+// This function should create a TCP socket, bind it to the specified port,
+// and start listening for connections.
+// If port is 0, the OS will assign a random available port.
+// The function should return the socket descriptor.
+std::pair<int, int> define_socket_TCP(int port) {
+    // TODO: Create socket using socket()
+    // TODO: Bind socket to port using bind()
+    // TODO: Start listening using listen()
+    // TODO: If port was 0, retrieve the assigned port using getsockname()
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock < 0)
+        errexit("socket: %s\n", strerror(errno));
 
-// ════════════════════════════════════════════════════════════════════════
-// NIVEL 1 — define_socket_TCP
-//   1. socket()  → crea el socket TCP
-//   2. bind()    → asocia IP + puerto
-//   3. listen()  → pone el socket en modo escucha
-// ════════════════════════════════════════════════════════════════════════
-int ProtocolServer::define_socket_TCP() {
-    struct sockaddr_in sin;
-    int s;
-
-    // Crear socket TCP
-    s = socket(AF_INET, SOCK_STREAM, 0);
-    if (s < 0)
-        throw std::runtime_error(std::string("socket(): ") + strerror(errno));
-
-    // Permitir reusar el puerto inmediatamente
     int opt = 1;
-    setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
-    // Rellenar estructura de dirección y hacer bind
+    struct sockaddr_in sin;
     memset(&sin, 0, sizeof(sin));
     sin.sin_family      = AF_INET;
-    sin.sin_addr.s_addr = INADDR_ANY;   // acepta conexiones de cualquier IP
-    sin.sin_port        = htons(port_); // puerto en orden de red 
+    sin.sin_addr.s_addr = INADDR_ANY;
+    sin.sin_port        = htons(port);
 
-    if (bind(s, (struct sockaddr*)&sin, sizeof(sin)) < 0)
-        throw std::runtime_error(std::string("bind(): ") + strerror(errno));
+    if (bind(sock, reinterpret_cast<struct sockaddr *>(&sin), sizeof(sin)) < 0)
+        errexit("bind: %s\n", strerror(errno));
 
-    // Poner en escucha
-    if (listen(s, 10) < 0)
-        throw std::runtime_error(std::string("listen(): ") + strerror(errno));
+    if (listen(sock, SOMAXCONN) < 0)
+        errexit("listen: %s\n", strerror(errno));
 
-    return s;
+    if (port == 0) {
+        socklen_t len = sizeof(sin);
+        if (getsockname(sock, reinterpret_cast<struct sockaddr *>(&sin), &len) < 0)
+            errexit("getsockname: %s\n", strerror(errno));
+        port = ntohs(sin.sin_port);
+    }
+    
+    return std::pair<int, int>(sock, port);  // Replace with actual socket descriptor and port number
 }
 
-// Bucle principal
-void ProtocolServer::run() {
-    listen_fd_ = define_socket_TCP();
-    printf("Servidor escuchando en puerto %d (raiz: %s)\n", port_, root_.c_str());
+ProtocolServer::ProtocolServer(int port) : port(port), msock(-1), should_stop(false) {
+}
 
-    struct sockaddr_in client_addr;
-    socklen_t alen = sizeof(client_addr);
+ProtocolServer::~ProtocolServer() {
+    stop();
+}
 
-    while (true) {
-        // accept() bloquea hasta que llega una conexión y devuelve el nuevo fd
-        int client_fd = accept(listen_fd_,
-                               (struct sockaddr*)&client_addr, &alen);
-        if (client_fd < 0) {
-            perror("accept");
-            continue;
-        }
-
-        // Crear proceso hijo para atender al cliente
-        pid_t pid = fork();
-        if (pid < 0) {
-            perror("fork");
-            close(client_fd);
-        } else if (pid == 0) {
-            // Proceso hijo
-            close(listen_fd_);      // el hijo no necesita el socket padre
-            handle_client(client_fd);
-            close(client_fd);
-            _exit(0);
-        } else {
-            // Proceso padre
-            close(client_fd);
-            waitpid(-1, nullptr, WNOHANG); // recoger zombies sin bloquear
-        }
+void ProtocolServer::stop() {
+    should_stop = true;
+    if (msock >= 0) {
+        shutdown(msock, SHUT_RDWR);
+        close(msock);
+        msock = -1;
     }
 }

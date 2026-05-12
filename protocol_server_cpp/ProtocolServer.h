@@ -1,24 +1,32 @@
-#pragma once
+#ifndef PROTOCOLSERVER_H
+#define PROTOCOLSERVER_H
+
 #include <string>
 
-// ─── Clase base para servidores TCP ──────────────────────────────────────────
+// Define a TCP socket and bind it to a port
+// If port is 0, a random available port will be assigned
+// Returns the socket descriptor, or -1 on error
+std::pair<int, int> define_socket_TCP(int port);
+
+// Base class for protocol servers
 class ProtocolServer {
 public:
-    ProtocolServer(int port, const std::string& root);
-    virtual ~ProtocolServer() = default;
+    ProtocolServer(int port = 0);
+    virtual ~ProtocolServer();
 
-    void run();  // bucle principal
+    // Start the server (blocking call)
+    virtual void run() = 0;
+
+    // Stop the server
+    virtual void stop();
+
+    // Get the port the server is listening on
+    int get_port() const { return port; }
 
 protected:
-    // Cada subclase implementa cómo atender a un cliente concreto
-    virtual void handle_client(int client_fd) = 0;
-
-    int port_;
-    std::string root_;  // directorio raíz que sirve el servidor
-
-private:
-    // NIVEL 1: crear socket TCP (socket + bind + listen)
-    int define_socket_TCP();
-
-    int listen_fd_ = -1;
+    int port;
+    int msock;  // Main socket descriptor
+    bool should_stop;
 };
+
+#endif

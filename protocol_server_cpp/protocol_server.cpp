@@ -1,78 +1,104 @@
-#include <cstdio>
-#include <cstdlib>
-#include <string>
-#include <stdexcept>
-#include <climits>      // PATH_MAX
+//****************************************************************************
+//                         REDES Y SISTEMAS DISTRIBUIDOS
+//                      
+//                     2º de grado de Ingeniería Informática
+//                       
+//                   Main entry point for protocol servers
+// 
+//****************************************************************************
 
-#include <unistd.h>     // realpath
-#include <sys/stat.h>   // stat
-
+#include <iostream>
+#include <csignal>
+#include <cstring>
+#include "common.h"
+#include "ProtocolServer.h"
 #include "GopherServer.h"
 #include "GeminiServer.h"
 
-static void usage(const char* prog) {
-    fprintf(stderr,
-        "Uso:\n"
-        "  %s gopher [puerto] [directorio]\n"
-        "  %s gemini [puerto] [directorio]\n"
-        "\n"
-        "Valores por defecto:\n"
-        "  puerto     → 7070 (gopher) / 1965 (gemini)\n"
-        "  directorio → ./demo/gopher_demo o ./demo/gemini_demo\n",
-        prog, prog);
-    exit(1);
+ProtocolServer *server = nullptr;
+
+extern "C" void sighandler(int signal, siginfo_t *info, void *ptr) {
+    std::cout << "Received signal, shutting down..." << std::endl;
+    if (server) {
+        server->stop();
+    }
+    exit(0);
 }
 
-// Comprueba si una ruta es un directorio válido (sustituye a fs::is_directory)
-static bool is_directory(const std::string& path) {
-    struct stat st;
-    return stat(path.c_str(), &st) == 0 && S_ISDIR(st.st_mode);
+void exit_handler() {
+    if (server) {
+        server->stop();
+    }
 }
 
-// Convierte a ruta absoluta (sustituye a fs::absolute)
-static std::string absolute_path(const std::string& path) {
-    char resolved[PATH_MAX];
-    if (realpath(path.c_str(), resolved) == nullptr)
-        return path;   // si falla devuelve la original
-    return std::string(resolved);
+void print_usage() {
+    std::cout << "Usage: protocol_server <protocol> [port] [options]" << std::endl;
+    std::cout << std::endl;
+    std::cout << "Protocols:" << std::endl;
+    std::cout << "  gopher    - Gopher protocol (RFC 1436)" << std::endl;
+    std::cout << "  gemini    - Gemini protocol" << std::endl;
+    std::cout << std::endl;
+    std::cout << "Options:" << std::endl;
+    std::cout << "  port      - Port number (default: assigned by the Operating System)" << std::endl;
+    std::cout << "  --tls     - Enable TLS for Gemini (optional, advanced feature)" << std::endl;
+    std::cout << std::endl;
+    std::cout << "Examples:" << std::endl;
+    std::cout << "  protocol_server gopher" << std::endl;
+    std::cout << "  protocol_server gopher 7070" << std::endl;
+    std::cout << "  protocol_server gemini" << std::endl;
+    std::cout << "  protocol_server gemini 1965" << std::endl;
+    std::cout << "  protocol_server gemini 1965 --tls" << std::endl;
 }
 
-int main(int argc, char* argv[]) {
-    if (argc < 2) usage(argv[0]);
-
-    std::string proto = argv[1];
+int main(int argc, char **argv) {
+    // Set up signal handlers
+    struct sigaction action{};
+    action.sa_sigaction = sighandler;
+    action.sa_flags = SA_SIGINFO;
+    sigaction(SIGINT, &action, nullptr);
+    sigaction(SIGTERM, &action, nullptr);
+    
+    atexit(exit_handler);
+    
+    // Parse command line arguments
+    if (argc < 2) {
+        print_usage();
+        errexit("\nError: Protocol not specified\n");
+    }
+    
+    std::string protocol = argv[1];
     int port = 0;
-    std::string root;
-
-    if (proto == "gopher") {
-        port = (argc >= 3) ? atoi(argv[2]) : 7070;
-        root = (argc >= 4) ? argv[3] : "demo/gopher_demo";
-    } else if (proto == "gemini") {
-        port = (argc >= 3) ? atoi(argv[2]) : 1965;
-        root = (argc >= 4) ? argv[3] : "demo/gemini_demo";
-    } else {
-        usage(argv[0]);
-    }
-
-    root = absolute_path(root);
-
-    if (!is_directory(root)) {
-        fprintf(stderr, "ERROR: '%s' no es un directorio valido\n", root.c_str());
-        return 1;
-    }
-
-    try {
-        if (proto == "gopher") {
-            GopherServer server(port, root);
-            server.run();
-        } else {
-            GeminiServer server(port, root);
-            server.run();
+    bool use_tls = false;
+    
+    // Parse port if provided
+    if (argc >= 3 && strcmp(argv[2], "--tls") != 0) {
+        if (sscanf(argv[2], "%i", &port) != 1) {
+            print_usage();
+            errexit("\nError: Port must be an integer\n");
         }
-    } catch (const std::exception& e) {
-        fprintf(stderr, "ERROR: %s\n", e.what());
-        return 1;
     }
-
+    
+    // Parse TLS flag for Gemini
+    if (argc >= 3) {
+        for (int i = 2; i < argc; i++) {
+            if (strcmp(argv[i], "--tls") == 0) {
+                use_tls = true;
+            }
+        }
+    }
+    
+    // Create the appropriate server
+    if (protocol == "gopher") {
+        server = new GopherServer(port);
+    } else if (protocol == "gemini") {
+        server = new GeminiServer(port, use_tls);
+    } else {
+        print_usage();
+        errexit("\nError: Unknown protocol '%s'\n", protocol.c_str());
+    }
+    
+    // Run the server
+    server->run();
+    
     return 0;
 }
