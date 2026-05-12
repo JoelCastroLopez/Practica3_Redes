@@ -1,0 +1,48 @@
+Especificación del Protocolo Gopher (RFC 1436)
+==============================================
+
+FORMATO DE SOLICITUD:
+El cliente envía un selector seguido de CR+LF:
+  <selector><CR><LF>
+
+Ejemplos:
+  /                    (directorio raíz)
+  /docs/archivo.txt    (archivo específico)
+  /images/             (subdirectorio)
+
+FORMATO DE RESPUESTA:
+
+Para archivos:
+  - Se envía el contenido del archivo directamente
+  - Se cierra la conexión al terminar
+
+Para directorios (menús):
+  - Cada línea representa un elemento
+  - Formato: <tipo><texto><TAB><selector><TAB><host><TAB><puerto><CR><LF>
+  - Termina con un punto en su propia línea: .<CR><LF>
+
+TIPOS DE ELEMENTOS:
+  0 - Archivo de texto
+  1 - Directorio/Menú
+  3 - Error
+  9 - Archivo binario
+  g - Imagen GIF
+  I - Imagen (otros formatos)
+  h - Archivo HTML
+  i - Texto informativo (no seleccionable)
+
+EJEMPLO DE MENÚ:
+  iServidor de Demostración	fake	fake	0
+  i	fake	fake	0
+  0README.txt	/README.txt	localhost	7070
+  1Documentos	/docs	localhost	7070
+  9archivo.zip	/files/archivo.zip	localhost	7070
+  .
+
+PUERTO ESTÁNDAR:
+  El puerto estándar de Gopher es 70, aunque se puede usar cualquier puerto.
+
+SEGURIDAD:
+  - Validar selectores para prevenir ataques de traversal
+  - Rechazar selectores con ".."
+  - Limitar longitud de selectores

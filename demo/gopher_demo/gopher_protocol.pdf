@@ -1,0 +1,165 @@
+%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+2 0 obj
+<<
+/Type /Pages
+/Kids [3 0 R]
+/Count 1
+>>
+endobj
+3 0 obj
+<<
+/Type /Page
+/Parent 2 0 R
+/Resources <<
+/Font <<
+/F1 4 0 R
+/F2 5 0 R
+>>
+>>
+/MediaBox [0 0 612 792]
+/Contents 6 0 R
+>>
+endobj
+4 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/BaseFont /Helvetica-Bold
+>>
+endobj
+5 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/BaseFont /Helvetica
+>>
+endobj
+6 0 obj
+<<
+/Length 1850
+>>
+stream
+BT
+/F1 24 Tf
+72 720 Td
+(Protocolo Gopher) Tj
+ET
+
+BT
+/F2 14 Tf
+72 690 Td
+(RFC 1436 - Resumen) Tj
+ET
+
+BT
+/F2 11 Tf
+72 650 Td
+(El protocolo Gopher es un protocolo de Internet disenado para distribuir,) Tj
+0 -15 Td
+(buscar y recuperar documentos a traves de Internet.) Tj
+ET
+
+BT
+/F1 11 Tf
+72 605 Td
+(Caracteristicas principales:) Tj
+ET
+
+BT
+/F2 11 Tf
+72 575 Td
+(  - Disenado en 1991 en la Universidad de Minnesota) Tj
+0 -15 Td
+(  - Protocolo simple basado en texto) Tj
+0 -15 Td
+(  - Organizacion jerarquica de informacion) Tj
+0 -15 Td
+(  - Puerto por defecto: 70) Tj
+ET
+
+BT
+/F1 11 Tf
+72 500 Td
+(Tipos de elementos Gopher:) Tj
+ET
+
+BT
+/F2 11 Tf
+72 470 Td
+(  0 - Archivo de texto) Tj
+0 -15 Td
+(  1 - Directorio/Menu) Tj
+0 -15 Td
+(  9 - Archivo binario \(general\)) Tj
+0 -15 Td
+(  g - Archivo GIF) Tj
+0 -15 Td
+(  I - Archivo de imagen) Tj
+0 -15 Td
+(  h - Documento HTML) Tj
+0 -15 Td
+(  i - Texto informativo) Tj
+ET
+
+BT
+/F1 11 Tf
+72 350 Td
+(Formato de solicitud:) Tj
+ET
+
+BT
+/F2 11 Tf
+72 320 Td
+(  <selector><CR><LF>) Tj
+ET
+
+BT
+/F1 11 Tf
+72 290 Td
+(Formato de respuesta \(menu\):) Tj
+ET
+
+BT
+/F2 11 Tf
+72 260 Td
+(  <tipo><texto><TAB><selector><TAB><host><TAB><puerto><CR><LF>) Tj
+ET
+
+BT
+/F2 11 Tf
+72 215 Td
+(Este documento es un ejemplo de archivo binario \(PDF\) servido) Tj
+0 -15 Td
+(a traves del protocolo Gopher.) Tj
+ET
+
+BT
+/F2 9 Tf
+72 100 Td
+(Servidor Gopher de Demostracion - Universidad de La Laguna) Tj
+ET
+endstream
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000262 00000 n 
+0000000343 00000 n 
+0000000419 00000 n 
+trailer
+<<
+/Size 7
+/Root 1 0 R
+>>
+startxref
+2321
+%%EOF

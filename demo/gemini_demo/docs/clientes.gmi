@@ -1,0 +1,185 @@
+# Clientes Gemini Disponibles
+
+## Clientes de Terminal
+
+### Amfora
+* **Descripción**: Cliente Gemini rico en características para terminal
+* **Plataforma**: Linux, macOS, Windows
+* **Lenguaje**: Go
+* **Características**:
+  * Navegación con teclado
+  * Soporte para marcadores
+  * Historial de navegación
+  * Descarga de archivos
+  * Configuración personalizable
+* **Instalación**: go install github.com/makeworld-the-better-one/amfora@latest
+* **Uso**: amfora gemini://ejemplo.com
+
+=> https://github.com/makeworld-the-better-one/amfora Repositorio de Amfora
+
+### Bombadillo
+* **Descripción**: Cliente multiprotocolo (Gemini, Gopher, Finger)
+* **Plataforma**: Linux, macOS, BSD
+* **Lenguaje**: Go
+* **Características**:
+  * Soporte para múltiples protocolos
+  * Interfaz estilo vim
+  * Marcadores y historial
+  * Modo de línea de comandos
+* **Instalación**: go install tildegit.org/sloum/bombadillo@latest
+* **Uso**: bombadillo gemini://ejemplo.com
+
+=> https://tildegit.org/sloum/bombadillo Repositorio de Bombadillo
+
+### Telescope
+* **Descripción**: Cliente Gemini minimalista para terminal
+* **Plataforma**: Linux, macOS, BSD
+* **Lenguaje**: C
+* **Características**:
+  * Muy ligero y rápido
+  * Interfaz simple
+  * Configuración mediante archivo
+* **Instalación**: Compilar desde fuente
+* **Uso**: telescope gemini://ejemplo.com
+
+=> https://telescope.omarpolo.com/ Sitio de Telescope
+
+## Clientes Gráficos (GUI)
+
+### Lagrange
+* **Descripción**: Cliente Gemini hermoso y moderno
+* **Plataforma**: Linux, macOS, Windows, iOS
+* **Lenguaje**: C
+* **Características**:
+  * Interfaz gráfica elegante
+  * Soporte para fuentes personalizadas
+  * Temas de color
+  * Pestañas múltiples
+  * Marcadores y feeds
+  * Identidades (certificados de cliente)
+* **Instalación**: Descargar binario o compilar
+* **Uso**: Interfaz gráfica intuitiva
+
+=> https://gmi.skyjake.fi/lagrange/ Sitio oficial de Lagrange
+
+### Kristall
+* **Descripción**: Cliente multiprotocolo con GUI
+* **Plataforma**: Linux, Windows
+* **Lenguaje**: C++ (Qt)
+* **Características**:
+  * Soporte para Gemini, HTTP, HTTPS, Gopher, Finger
+  * Interfaz Qt nativa
+  * Marcadores
+  * Favoritos
+* **Instalación**: Compilar desde fuente
+* **Uso**: Interfaz gráfica
+
+=> https://github.com/MasterQ32/kristall Repositorio de Kristall
+
+### Castor
+* **Descripción**: Cliente Gemini para navegadores web
+* **Plataforma**: Cualquiera con navegador moderno
+* **Lenguaje**: Rust (compilado a WebAssembly)
+* **Características**:
+  * Funciona en el navegador
+  * Sin instalación necesaria
+  * Interfaz web moderna
+* **Uso**: Acceder vía web
+
+=> https://git.sr.ht/~julienxx/castor Repositorio de Castor
+
+## Clientes Móviles
+
+### Lagrange (iOS)
+* **Descripción**: Versión iOS del cliente Lagrange
+* **Plataforma**: iOS, iPadOS
+* **Características**:
+  * Mismas características que versión desktop
+  * Optimizado para táctil
+  * Sincronización de marcadores
+* **Instalación**: App Store
+
+### Ariane
+* **Descripción**: Cliente Gemini para Android
+* **Plataforma**: Android
+* **Lenguaje**: Kotlin
+* **Características**:
+  * Interfaz Material Design
+  * Marcadores
+  * Historial
+  * Compartir contenido
+* **Instalación**: F-Droid o Google Play
+
+=> https://oppen.digital/software/ariane/ Sitio de Ariane
+
+### Elaho
+* **Descripción**: Cliente Gemini para iOS
+* **Plataforma**: iOS
+* **Características**:
+  * Diseño nativo iOS
+  * Marcadores y historial
+  * Soporte para certificados
+* **Instalación**: App Store
+
+## Clientes Programáticos
+
+### gemget
+* **Descripción**: Cliente de línea de comandos estilo wget
+* **Plataforma**: Cualquiera con Python
+* **Lenguaje**: Python
+* **Uso**: gemget gemini://ejemplo.com/archivo.gmi
+
+### curl (experimental)
+* **Descripción**: curl con soporte Gemini (experimental)
+* **Nota**: Requiere compilación especial
+
+## Navegadores Web con Soporte Gemini
+
+### Agregore
+* **Descripción**: Navegador para protocolos peer-to-peer
+* **Plataforma**: Linux, macOS, Windows
+* **Características**:
+  * Soporte para Gemini, IPFS, Hypercore
+  * Basado en Electron
+  * Interfaz web familiar
+
+=> https://agregore.mauve.moe/ Sitio de Agregore
+
+## Extensiones de Navegador
+
+### Gemini Proxy
+* **Descripción**: Extensiones que permiten ver Gemini en navegadores web
+* **Funcionamiento**: Proxy HTTP a Gemini
+* **Nota**: No es la experiencia nativa recomendada
+
+## Recomendaciones
+
+### Para Principiantes
+* **GUI**: Lagrange - Hermoso y fácil de usar
+* **Terminal**: Amfora - Rico en características
+
+### Para Puristas
+* **Terminal**: Telescope - Minimalista y rápido
+* **GUI**: Kristall - Multiprotocolo
+
+### Para Móvil
+* **iOS**: Lagrange o Elaho
+* **Android**: Ariane
+
+## Crear Tu Propio Cliente
+
+Los clientes Gemini son relativamente fáciles de implementar:
+
+* Protocolo simple
+* Sin JavaScript ni CSS
+* Solo necesitas:
+  * Sockets TCP
+  * TLS/SSL
+  * Parser de Gemtext básico
+
+=> /docs/ejemplo_cliente.txt Ver código de ejemplo en Python
+
+## Recursos
+
+=> gemini://gemini.circumlunar.space/clients.html Lista completa de clientes
+=> gemini://gemini.circumlunar.space/software/ Software Gemini

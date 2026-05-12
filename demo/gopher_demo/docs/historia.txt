@@ -1,0 +1,33 @@
+Historia del Protocolo Gopher
+==============================
+
+ORIGEN:
+El protocolo Gopher fue creado en 1991 en la Universidad de Minnesota
+por Mark P. McCahill y un equipo de programadores.
+
+NOMBRE:
+El nombre "Gopher" tiene un doble significado:
+1. La mascota de la Universidad de Minnesota es el "Golden Gopher"
+2. "Go for" (ir a buscar) información
+
+AUGE (1991-1993):
+Durante este período, Gopher fue extremadamente popular:
+- Miles de servidores Gopher en todo el mundo
+- Considerado el futuro de Internet
+- Interfaz más amigable que FTP o Telnet
+
+DECLIVE (1993-1995):
+Varios factores contribuyeron a su declive:
+- La aparición de la World Wide Web
+- Decisión de la Universidad de Minnesota de cobrar licencias
+- Mayor flexibilidad de HTTP y HTML
+
+LEGADO:
+Aunque ya no es ampliamente usado, Gopher:
+- Demostró la viabilidad de sistemas de hipertexto
+- Influyó en el diseño de la Web
+- Todavía tiene una pequeña comunidad de entusiastas
+- Algunos servidores Gopher siguen activos hoy en día
+
+ESPECIFICACIÓN:
+El protocolo está documentado en RFC 1436.

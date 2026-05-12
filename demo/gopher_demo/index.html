@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servidor Gopher de Demostración</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        h1 {
+            color: #0066cc;
+            border-bottom: 3px solid #0066cc;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            color: #0088aa;
+            margin-top: 30px;
+        }
+
+        .retro-box {
+            background-color: #fff;
+            border: 2px solid #333;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 5px 5px 0px #333;
+        }
+
+        code {
+            background-color: #e0e0e0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+
+        pre {
+            background-color: #2d2d2d;
+            color: #f0f0f0;
+            padding: 15px;
+            overflow-x: auto;
+            border-left: 4px solid #0066cc;
+        }
+
+        ul {
+            line-height: 1.8;
+        }
+
+        .info {
+            background-color: #e6f3ff;
+            border-left: 4px solid #0066cc;
+            padding: 10px 15px;
+            margin: 15px 0;
+        }
+
+        a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="retro-box">
+        <h1>🌐 Servidor Gopher de Demostración</h1>
+
+        <div class="info">
+            <strong>Nota:</strong> Este es un archivo HTML servido a través del protocolo Gopher.
+            Aunque Gopher fue diseñado principalmente para texto plano, también puede servir
+            otros tipos de archivos, incluyendo HTML.
+        </div>
+
+        <h2>¿Qué es Gopher?</h2>
+        <p>
+            Gopher es un protocolo de Internet diseñado en 1991 en la Universidad de Minnesota.
+            Fue uno de los primeros sistemas de distribución de documentos en Internet,
+            precediendo a la World Wide Web.
+        </p>
+
+        <h2>Características del Protocolo</h2>
+        <ul>
+            <li><strong>Simple:</strong> Diseño minimalista y fácil de implementar</li>
+            <li><strong>Jerárquico:</strong> Organización en menús y directorios</li>
+            <li><strong>Eficiente:</strong> Bajo uso de ancho de banda</li>
+            <li><strong>Multiplataforma:</strong> Funciona en cualquier sistema</li>
+        </ul>
+
+        <h2>Tipos de Elementos en Gopher</h2>
+        <div class="retro-box">
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr style="background-color: #0066cc; color: white;">
+                    <th style="padding: 10px; text-align: left;">Tipo</th>
+                    <th style="padding: 10px; text-align: left;">Descripción</th>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;"><code>0</code></td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">Archivo de texto</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;"><code>1</code></td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">Directorio/Menú</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;"><code>9</code></td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">Archivo binario (PDF, ejecutables, etc.)
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;"><code>g</code></td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">Archivo GIF</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;"><code>I</code></td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">Archivo de imagen (PNG, JPEG, etc.)</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;"><code>h</code></td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">Documento HTML</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;"><code>i</code></td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">Texto informativo</td>
+                </tr>
+            </table>
+        </div>
+
+        <h2>Ejemplo de Conexión</h2>
+        <p>Para conectarte a este servidor Gopher, puedes usar:</p>
+        <pre>lynx gopher://localhost:7070</pre>
+
+        <p>O con netcat para ver el protocolo en acción:</p>
+        <pre>echo -e "/\r\n" | nc localhost 7070</pre>
+
+        <h2>Contenido de este Servidor</h2>
+        <ul>
+            <li><code>/README.txt</code> - Introducción al servidor</li>
+            <li><code>/docs/historia.txt</code> - Historia del protocolo Gopher</li>
+            <li><code>/docs/protocolo.txt</code> - Especificación técnica</li>
+            <li><code>/docs/clientes.txt</code> - Información sobre clientes</li>
+            <li><code>/docs/ejemplo_cliente.txt</code> - Código de ejemplo</li>
+            <li><code>/index.html</code> - Este archivo HTML (tipo h)</li>
+            <li><code>/gopher_protocol.pdf</code> - Documento PDF (binario tipo 9)</li>
+            <li><code>/images/gopher_logo.png</code> - Logo de Gopher (imagen tipo I)</li>
+        </ul>
+
+        <h2>Referencias</h2>
+        <ul>
+            <li><a href="https://www.rfc-editor.org/rfc/rfc1436">RFC 1436 - Especificación Gopher</a></li>
+            <li><a href="https://en.wikipedia.org/wiki/Gopher_(protocol)">Wikipedia: Gopher Protocol</a></li>
+        </ul>
+
+        <hr style="margin: 30px 0; border: 1px solid #ccc;">
+        <p style="text-align: center; color: #666;">
+            <em>Servidor Gopher de Demostración - Universidad de La Laguna</em>
+        </p>
+    </div>
+</body>
+
+</html>

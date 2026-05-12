@@ -1,0 +1,51 @@
+Clientes Gopher Disponibles
+===========================
+
+NAVEGADORES DE TEXTO:
+------------------
+Lynx
+  - Navegador web de texto que también soporta Gopher
+  - Uso: lynx gopher://localhost:7070
+  - Disponible en la mayoría de sistemas Unix/Linux
+  - Muy estable y maduro
+
+CLIENTES GOPHER DEDICADOS:
+------------------------
+Gopher (cliente original)
+  - Cliente de línea de comandos original
+  - Raramente usado hoy en día
+
+Overbite (Firefox)
+  - Extensión para Firefox
+  - Permite navegar Gopher desde Firefox
+  - Ya no mantenida activamente
+
+CLIENTES MODERNOS:
+----------------
+Bombadillo
+  - Cliente de terminal moderno
+  - Soporta Gopher, Gemini y más
+  - Interfaz tipo vim
+  - Activamente mantenido
+
+Lagrange
+  - Cliente gráfico moderno
+  - Principalmente para Gemini, pero soporta Gopher
+  - Interfaz bonita y moderna
+
+NAVEGADORES WEB:
+--------------
+La mayoría de navegadores web modernos (Chrome, Firefox, Safari)
+ya NO soportan Gopher nativamente. Se necesita:
+  - Usar un proxy HTTP-to-Gopher
+  - Instalar extensiones
+  - Usar navegadores especializados
+
+PRUEBAS CON TELNET/NETCAT:
+------------------------
+Para pruebas básicas:
+  echo -e "/\r\n" | nc localhost 7070
+  
+O con telnet:
+  telnet localhost 7070
+  (luego escribir / y presionar Enter)

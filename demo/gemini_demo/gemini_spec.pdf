@@ -1,0 +1,116 @@
+%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+2 0 obj
+<<
+/Type /Pages
+/Kids [3 0 R]
+/Count 1
+>>
+endobj
+3 0 obj
+<<
+/Type /Page
+/Parent 2 0 R
+/Resources <<
+/Font <<
+/F1 4 0 R
+>>
+>>
+/MediaBox [0 0 612 792]
+/Contents 5 0 R
+>>
+endobj
+4 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/BaseFont /Helvetica
+>>
+endobj
+5 0 obj
+<<
+/Length 1200
+>>
+stream
+BT
+/F1 24 Tf
+50 750 Td
+(Protocolo Gemini - Especificacion) Tj
+0 -30 Td
+/F1 12 Tf
+(Este es un archivo PDF de demostracion) Tj
+0 -40 Td
+(RESUMEN DEL PROTOCOLO GEMINI) Tj
+0 -25 Td
+/F1 10 Tf
+(Gemini es un protocolo de Internet disenado en 2019 como alternativa) Tj
+0 -15 Td
+(ligera a HTTP. Combina la simplicidad de Gopher con caracteristicas) Tj
+0 -15 Td
+(modernas, creando una experiencia enfocada en contenido y privacidad.) Tj
+0 -30 Td
+(CARACTERISTICAS PRINCIPALES:) Tj
+0 -20 Td
+(- Protocolo simple basado en texto) Tj
+0 -15 Td
+(- Solicitudes basadas en URLs completas) Tj
+0 -15 Td
+(- Respuestas con codigos de estado) Tj
+0 -15 Td
+(- Soporte para tipos MIME) Tj
+0 -15 Td
+(- TLS obligatorio en produccion) Tj
+0 -15 Td
+(- Formato de texto nativo: Gemtext) Tj
+0 -30 Td
+(FORMATO DE SOLICITUD:) Tj
+0 -20 Td
+(gemini://hostname:port/path\\r\\n) Tj
+0 -30 Td
+(FORMATO DE RESPUESTA:) Tj
+0 -20 Td
+(<codigo> <meta>\\r\\n) Tj
+0 -15 Td
+(<contenido>) Tj
+0 -30 Td
+(CODIGOS DE ESTADO:) Tj
+0 -20 Td
+(1x - INPUT) Tj
+0 -15 Td
+(2x - SUCCESS) Tj
+0 -15 Td
+(3x - REDIRECT) Tj
+0 -15 Td
+(4x - TEMPORARY FAILURE) Tj
+0 -15 Td
+(5x - PERMANENT FAILURE) Tj
+0 -15 Td
+(6x - CLIENT CERTIFICATE REQUIRED) Tj
+0 -30 Td
+(Este archivo demuestra el soporte de archivos binarios en Gemini.) Tj
+0 -15 Td
+(Tipo MIME: application/pdf) Tj
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f
+0000000009 00000 n
+0000000058 00000 n
+0000000115 00000 n
+0000000262 00000 n
+0000000341 00000 n
+trailer
+<<
+/Size 6
+/Root 1 0 R
+>>
+startxref
+1593
+%%EOF

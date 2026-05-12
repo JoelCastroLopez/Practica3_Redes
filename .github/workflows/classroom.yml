@@ -1,0 +1,148 @@
+name: Autograding Tests
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  repository_dispatch:
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Check Run Limit
+      run: |
+        MAX_RUNS=10
+        RUN_NUMBER=${{ github.run_number }}
+        EVENT_NAME=${{ github.event_name }}
+        
+        echo "### 🚀 Attempt Control" >> $GITHUB_STEP_SUMMARY
+        echo "This is attempt **$RUN_NUMBER** of a maximum of **$MAX_RUNS**." >> $GITHUB_STEP_SUMMARY
+        
+        if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+          echo "⚠️ **Manual Execution (Teacher Override):** Attempt limit ignored." >> $GITHUB_STEP_SUMMARY
+        elif [ "$RUN_NUMBER" -le "$MAX_RUNS" ]; then
+          echo "✅ You have **$((MAX_RUNS - RUN_NUMBER))** official attempts remaining." >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Attempt limit exceeded.**" >> $GITHUB_STEP_SUMMARY
+          echo "To avoid excessive resource consumption, automatic autograding has been blocked. Contact the teacher if you believe this is an error." >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
+
+    - name: Checkout private tests
+      run: |
+        git clone https://${{ secrets.TESTS_PAT }}@github.com/Universidad-de-La-Laguna-RSD/protocol-server-tests-private.git tests
+    
+    - name: Repository Cleanliness
+      uses: classroom-resources/autograding-command-grader@v1
+      id: repo_cleanliness
+      with:
+        test-name: repo_cleanliness
+        max-score: '5'
+        command: |
+          # Check for forbidden build artifacts in the repository
+          FORBIDDEN=$(find . -maxdepth 3 \( -name "CMakeFiles" -o -name "CMakeCache.txt" -o -name "cmake_install.cmake" -o -name "Makefile" -o -name "protocol_server" \) -not -path "*/.git/*")
+          if [ -n "$FORBIDDEN" ]; then
+            echo "Error: The following build files should not be in the repository:"
+            echo "$FORBIDDEN"
+            exit 1
+          fi
+
+    - name: Configure CMake
+      run: cd protocol_server_cpp && cmake .
+    - name: Build
+      run: cd protocol_server_cpp && make
+    
+    - name: Generate TLS Certificates
+      run: |
+        cd protocol_server_cpp
+        openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes -subj "/C=ES/ST=Tenerife/L=San Cristobal de La Laguna/O=Universidad de La Laguna/CN=localhost"
+    
+    - name: Python-install-requirements
+      run: pip install -r tests/requirements.txt
+
+    - name: Level 1-2 (Bases & Gopher Simple)
+      uses: classroom-resources/autograding-command-grader@v1
+      id: level_1_2
+      with:
+        test-name: level_1_2
+        max-score: '10'
+        command: pytest tests/test_protocol_server.py -k "test_server or test_gopher_simple or test_gopher_selector or test_gopher_root or test_gopher_file_not_found"
+
+    - name: Level 3 (Gopher Advanced)
+      uses: classroom-resources/autograding-command-grader@v1
+      id: level_3
+      with:
+        test-name: level_3
+        max-score: '15'
+        command: pytest tests/test_protocol_server.py -k "test_gopher_directory or test_gopher_item or test_gopher_binary or test_gopher_subdirectory or test_gopher_path_traversal"
+
+    - name: Level 3.5 (Gopher Sequential)
+      uses: classroom-resources/autograding-command-grader@v1
+      id: level_3_5
+      with:
+        test-name: level_3_5
+        max-score: '5'
+        command: pytest tests/test_protocol_server.py -k "test_gopher_sequential"
+
+    - name: Level 4 (Gemini Basic)
+      uses: classroom-resources/autograding-command-grader@v1
+      id: level_4
+      with:
+        test-name: level_4
+        max-score: '15'
+        command: pytest tests/test_protocol_server.py -k "test_gemini_simple or test_gemini_success or test_gemini_url or test_gemini_file_not_found"
+
+    - name: Level 5 (Gemini Advanced)
+      uses: classroom-resources/autograding-command-grader@v1
+      id: level_5
+      with:
+        test-name: level_5
+        max-score: '15'
+        command: pytest tests/test_protocol_server.py -k "test_gemini_mime or test_gemini_directory or test_gemini_status or test_gemini_max_url or test_gemini_path_security"
+
+    - name: Level 5.5 (Gemini Sequential)
+      uses: classroom-resources/autograding-command-grader@v1
+      id: level_5_5
+      with:
+        test-name: level_5_5
+        max-score: '5'
+        command: pytest tests/test_protocol_server.py -k "test_gemini_sequential"
+
+    - name: Level 6 (Gemini TLS)
+      uses: classroom-resources/autograding-command-grader@v1
+      id: level_6
+      with:
+        test-name: level_6
+        max-score: '15'
+        command: pytest tests/test_protocol_server.py -k "test_gemini_tls"
+
+    - name: Level 7-8 (Advanced Ops & Stress)
+      uses: classroom-resources/autograding-command-grader@v1
+      id: level_7_8
+      with:
+        test-name: level_7_8
+        max-score: '15'
+        command: pytest tests/test_protocol_server.py -k "test_multiple or test_large or test_rapid"
+
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        REPO_CLEANLINESS_RESULTS: "${{steps.repo_cleanliness.outputs.result}}"
+        LEVEL_1_2_RESULTS: "${{steps.level_1_2.outputs.result}}"
+        LEVEL_3_RESULTS: "${{steps.level_3.outputs.result}}"
+        LEVEL_3_5_RESULTS: "${{steps.level_3_5.outputs.result}}"
+        LEVEL_4_RESULTS: "${{steps.level_4.outputs.result}}"
+        LEVEL_5_RESULTS: "${{steps.level_5.outputs.result}}"
+        LEVEL_5_5_RESULTS: "${{steps.level_5_5.outputs.result}}"
+        LEVEL_6_RESULTS: "${{steps.level_6.outputs.result}}"
+        LEVEL_7_8_RESULTS: "${{steps.level_7_8.outputs.result}}"
+      with:
+        runners: repo_cleanliness,level_1_2,level_3,level_3_5,level_4,level_5,level_5_5,level_6,level_7_8

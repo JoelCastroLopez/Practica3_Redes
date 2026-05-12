@@ -1,0 +1,129 @@
+Guía de Uso del Servidor Gopher de Demostración
+===============================================
+
+CONTENIDO DEL SERVIDOR:
+----------------------
+Este servidor de demostración contiene:
+
+/README.txt              - Bienvenida e introducción
+/docs/historia.txt       - Historia del protocolo Gopher
+/docs/protocolo.txt      - Especificación técnica del protocolo
+/docs/clientes.txt       - Información sobre clientes Gopher
+/docs/ejemplo_cliente.txt - Código de ejemplo en Python
+/index.html              - Página HTML de demostración
+/gopher_protocol.pdf     - Documento PDF (archivo binario tipo 9)
+/images/gopher_logo.png  - Logo de Gopher (imagen tipo I)
+
+CÓMO INICIAR EL SERVIDOR:
+-------------------------
+1. Asegúrate de que el servidor esté compilado:
+   cd protocol_server_cpp/cmake-build-debug
+   cmake ..
+   make
+
+2. Ejecuta el script de demostración:
+   cd gopher_demo
+   ./demo.sh
+
+   O manualmente:
+   cd gopher_demo
+   ../protocol_server_cpp/cmake-build-debug/protocol_server gopher 7070
+
+CÓMO PROBAR CON LYNX:
+--------------------
+Lynx es un navegador web de texto que soporta Gopher.
+
+1. Instalar lynx (si no está instalado):
+   Ubuntu/Debian: sudo apt-get install lynx
+   Fedora/RHEL:   sudo dnf install lynx
+   macOS:         brew install lynx
+
+2. Conectar al servidor:
+   lynx gopher://localhost:7070
+
+3. Navegar:
+   - Usa las flechas arriba/abajo para moverte entre elementos
+   - Presiona Enter para seleccionar un elemento
+   - Presiona 'q' para salir
+   - Presiona 'h' para ayuda
+
+NAVEGACIÓN EN LYNX:
+------------------
+Cuando te conectes, verás un menú con:
+- README.txt (archivo de texto)
+- docs/ (directorio)
+- images/ (directorio)
+- files/ (directorio)
+
+Selecciona cualquier elemento para verlo o navegar dentro.
+
+PRUEBAS MANUALES:
+----------------
+También puedes probar con herramientas de línea de comandos:
+
+1. Ver el menú principal:
+   echo -e "/\r\n" | nc localhost 7070
+
+2. Ver un archivo:
+   echo -e "/README.txt\r\n" | nc localhost 7070
+
+3. Ver un directorio:
+   echo -e "/docs\r\n" | nc localhost 7070
+
+ACCESO A ARCHIVOS HTML Y BINARIOS:
+----------------------------------
+El servidor también puede servir archivos HTML, binarios e imágenes:
+
+1. Ver el archivo HTML:
+   echo -e "/index.html\r\n" | nc localhost 7070 > /tmp/gopher_index.html
+   
+   Luego abre /tmp/gopher_index.html en tu navegador web.
+   O con lynx:
+   lynx gopher://localhost:7070/h/index.html
+
+2. Descargar el archivo binario (PDF):
+   echo -e "/gopher_protocol.pdf\r\n" | nc localhost 7070 > /tmp/gopher_protocol.pdf
+   
+   Luego abre /tmp/gopher_protocol.pdf con un visor de PDF.
+   Con lynx:
+   lynx gopher://localhost:7070/9/gopher_protocol.pdf
+
+3. Descargar la imagen:
+   echo -e "/images/gopher_logo.png\r\n" | nc localhost 7070 > /tmp/gopher_logo.png
+   
+   Luego abre /tmp/gopher_logo.png con un visor de imágenes.
+   Con lynx:
+   lynx gopher://localhost:7070/I/images/gopher_logo.png
+   
+   Nota: lynx descargará los archivos automáticamente.
+
+FORMATO DE MENÚ GOPHER:
+-----------------------
+Los menús Gopher tienen este formato:
+<tipo><texto><TAB><selector><TAB><host><TAB><puerto>
+
+Tipos comunes:
+0 = Archivo de texto
+1 = Directorio
+9 = Archivo binario (PDF, ejecutables, archivos comprimidos, etc.)
+g = Archivo GIF
+I = Archivo de imagen (PNG, JPEG, etc.)
+h = Documento HTML
+i = Texto informativo (no seleccionable)
+
+SOLUCIÓN DE PROBLEMAS:
+---------------------
+Si el servidor no inicia:
+- Verifica que el puerto 7070 no esté en uso
+- Comprueba que el ejecutable existe
+- Revisa los permisos del directorio
+
+Si lynx no se conecta:
+- Verifica que el servidor esté corriendo
+- Prueba con: lynx gopher://127.0.0.1:7070
+- Comprueba el firewall
+
+RECURSOS ADICIONALES:
+--------------------
+- RFC 1436: https://www.rfc-editor.org/rfc/rfc1436
+- Gopher Wikipedia: https://en.wikipedia.org/wiki/Gopher_(protocol)

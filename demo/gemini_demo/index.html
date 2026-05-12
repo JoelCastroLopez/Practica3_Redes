@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servidor Gemini de Demostración</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            text-align: center;
+        }
+        
+        h2 {
+            color: #764ba2;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .highlight {
+            background: linear-gradient(120deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .highlight h3 {
+            margin-bottom: 10px;
+        }
+        
+        ul {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            color: #666;
+        }
+        
+        a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Servidor Gemini de Demostración</h1>
+        
+        <div class="highlight">
+            <h3>¡Bienvenido al Protocolo Gemini!</h3>
+            <p>Este es un archivo HTML servido a través del protocolo Gemini, demostrando la capacidad del servidor para manejar diferentes tipos MIME.</p>
+        </div>
+        
+        <h2>¿Qué es Gemini?</h2>
+        <p>
+            Gemini es un protocolo de Internet moderno diseñado en 2019 como un punto medio entre 
+            Gopher y HTTP. Combina la simplicidad de Gopher con algunas características modernas, 
+            creando una experiencia de navegación enfocada en el contenido y la privacidad.
+        </p>
+        
+        <h2>Características Principales</h2>
+        <ul>
+            <li><strong>Simplicidad:</strong> Protocolo minimalista y fácil de implementar</li>
+            <li><strong>Privacidad:</strong> Sin cookies, sin JavaScript, sin rastreo</li>
+            <li><strong>Seguridad:</strong> TLS obligatorio en producción</li>
+            <li><strong>Gemtext:</strong> Formato de marcado nativo simple y legible</li>
+            <li><strong>Tipos MIME:</strong> Soporte para diferentes tipos de archivos</li>
+        </ul>
+        
+        <h2>Ejemplo de Solicitud Gemini</h2>
+        <div class="code-block">
+gemini://localhost:1965/index.html\r\n
+        </div>
+        
+        <h2>Ejemplo de Respuesta</h2>
+        <div class="code-block">
+20 text/html\r\n
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+...
+        </div>
+        
+        <h2>Contenido de este Servidor</h2>
+        <p>Este servidor de demostración incluye:</p>
+        <ul>
+            <li><code>README.gmi</code> - Página principal en formato Gemtext</li>
+            <li><code>docs/</code> - Documentación sobre el protocolo Gemini</li>
+            <li><code>index.html</code> - Esta página HTML</li>
+            <li><code>gemini_spec.pdf</code> - Especificación en PDF</li>
+            <li><code>images/</code> - Imágenes de ejemplo</li>
+        </ul>
+        
+        <h2>Clientes Gemini Recomendados</h2>
+        <ul>
+            <li><strong>Lagrange:</strong> Cliente gráfico hermoso y moderno</li>
+            <li><strong>Amfora:</strong> Cliente de terminal rico en características</li>
+            <li><strong>Bombadillo:</strong> Cliente multiprotocolo para terminal</li>
+            <li><strong>Kristall:</strong> Cliente Qt multiplataforma</li>
+        </ul>
+        
+        <h2>Recursos Adicionales</h2>
+        <p>
+            Para más información sobre el protocolo Gemini, visita:
+        </p>
+        <ul>
+            <li><a href="https://gemini.circumlunar.space/">Proyecto Gemini</a></li>
+            <li><a href="https://en.wikipedia.org/wiki/Gemini_(protocol)">Gemini en Wikipedia</a></li>
+        </ul>
+        
+        <div class="footer">
+            <p>Servidor Gemini de Demostración | Protocolo RFC Gemini</p>
+            <p>Este archivo demuestra el soporte de tipos MIME en Gemini</p>
+        </div>
+    </div>
+</body>
+</html>

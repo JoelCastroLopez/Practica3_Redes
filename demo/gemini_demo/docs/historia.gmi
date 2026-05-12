@@ -1,0 +1,97 @@
+# Historia del Protocolo Gemini
+
+## Origen
+
+El protocolo Gemini fue creado en 2019 por Solderpunk, un desarrollador anónimo preocupado por la complejidad y los problemas de privacidad de la Web moderna.
+
+## Motivación
+
+El proyecto nació de la frustración con:
+
+* La complejidad excesiva de HTTP y HTML
+* JavaScript omnipresente y rastreo web
+* Páginas web lentas y sobrecargadas
+* Falta de privacidad en la navegación
+* Dificultad para crear contenido simple
+
+## Filosofía de Diseño
+
+Gemini se diseñó con estos principios:
+
+* **Simplicidad**: Más simple que HTTP, pero más capaz que Gopher
+* **Privacidad**: Sin cookies, sin JavaScript, sin rastreo
+* **Sostenibilidad**: Bajo consumo de ancho de banda y recursos
+* **Accesibilidad**: Fácil de implementar clientes y servidores
+* **Enfoque en contenido**: El texto es lo primero
+
+## Cronología
+
+### 2019 - Nacimiento
+* Solderpunk publica la primera especificación
+* Primeros servidores y clientes experimentales
+* Comunidad pequeña pero entusiasta
+
+### 2020 - Crecimiento
+* Estabilización del protocolo
+* Aumento de servidores Gemini (cápsulas)
+* Desarrollo de clientes multiplataforma
+* Creación de contenido original
+
+### 2021-2023 - Madurez
+* Especificación estable
+* Ecosistema diverso de clientes y servidores
+* Comunidad activa y creciente
+* Uso en educación y experimentación
+
+### 2024-Presente
+* Protocolo establecido y estable
+* Miles de cápsulas Gemini activas
+* Uso en proyectos educativos
+* Alternativa viable para contenido simple
+
+## Comparación con Otros Protocolos
+
+### vs Gopher (1991)
+* Gemini es más moderno y flexible
+* Mejor soporte para tipos MIME
+* Diseñado para TLS desde el inicio
+* Formato de texto más rico (Gemtext)
+
+### vs HTTP/Web (1991/presente)
+* Gemini es mucho más simple
+* Sin JavaScript ni contenido dinámico
+* Mejor privacidad por diseño
+* Menor consumo de recursos
+
+## Comunidad
+
+La comunidad Gemini es conocida por:
+
+* Enfoque en contenido de calidad sobre cantidad
+* Respeto por la privacidad
+* Experimentación técnica
+* Nostalgia por la Web temprana
+* Rechazo a la comercialización
+
+## Impacto
+
+Aunque Gemini no reemplazará a la Web, ha demostrado:
+
+* Que protocolos simples siguen siendo viables
+* El valor de la privacidad por diseño
+* Que existe demanda de alternativas a la Web
+* La importancia del contenido sobre la forma
+
+## Especificación
+
+El protocolo está documentado en:
+=> gemini://gemini.circumlunar.space/docs/specification.gmi Especificación oficial
+
+## Legado
+
+Gemini representa un movimiento hacia:
+
+* Tecnología más humana y accesible
+* Internet descentralizado
+* Privacidad como estándar
+* Sostenibilidad digital

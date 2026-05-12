@@ -1,0 +1,42 @@
+Ejemplo de Código: Cliente Gopher Simple en Python
+==================================================
+
+import socket
+
+def gopher_request(host, port, selector):
+    """
+    Realiza una solicitud Gopher simple
+    """
+    # Crear socket TCP
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    
+    try:
+        # Conectar al servidor
+        sock.connect((host, port))
+        
+        # Enviar selector con CR+LF
+        request = selector + "\r\n"
+        sock.sendall(request.encode('utf-8'))
+        
+        # Recibir respuesta
+        response = b""
+        while True:
+            chunk = sock.recv(4096)
+            if not chunk:
+                break
+            response += chunk
+        
+        return response.decode('utf-8', errors='ignore')
+    
+    finally:
+        sock.close()
+
+# Ejemplo de uso:
+if __name__ == "__main__":
+    # Solicitar el directorio raíz
+    result = gopher_request("localhost", 7070, "/")
+    print(result)
+    
+    # Solicitar un archivo específico
+    result = gopher_request("localhost", 7070, "/README.txt")
+    print(result)

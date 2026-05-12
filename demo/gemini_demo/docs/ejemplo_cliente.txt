@@ -1,0 +1,183 @@
+#!/usr/bin/env python3
+"""
+Cliente Gemini Simple en Python
+================================
+
+Este es un ejemplo básico de cómo implementar un cliente Gemini.
+Demuestra los conceptos fundamentales del protocolo.
+
+Uso:
+    python3 ejemplo_cliente.py gemini://ejemplo.com/ruta
+"""
+
+import socket
+import ssl
+import sys
+from urllib.parse import urlparse
+
+
+def parse_gemini_url(url):
+    """
+    Parsea una URL Gemini y extrae sus componentes.
+    
+    Args:
+        url: URL completa (ej: gemini://ejemplo.com:1965/ruta)
+    
+    Returns:
+        tuple: (host, port, path)
+    """
+    if not url.startswith('gemini://'):
+        raise ValueError("La URL debe comenzar con gemini://")
+    
+    parsed = urlparse(url)
+    host = parsed.hostname
+    port = parsed.port or 1965  # Puerto por defecto
+    path = parsed.path or '/'
+    
+    return host, port, path
+
+
+def fetch_gemini(url, verify_ssl=False):
+    """
+    Realiza una solicitud Gemini y retorna la respuesta.
+    
+    Args:
+        url: URL completa de Gemini
+        verify_ssl: Si verificar certificados SSL (False para desarrollo)
+    
+    Returns:
+        tuple: (status_code, meta, content)
+    """
+    # Parsear URL
+    host, port, path = parse_gemini_url(url)
+    
+    # Crear socket TCP
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    
+    # Configurar contexto SSL/TLS
+    context = ssl.create_default_context()
+    if not verify_ssl:
+        # Para desarrollo: aceptar certificados autofirmados
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+    
+    # Envolver socket con TLS
+    secure_sock = context.wrap_socket(sock, server_hostname=host)
+    
+    try:
+        # Conectar al servidor
+        secure_sock.connect((host, port))
+        
+        # Construir y enviar solicitud
+        # Formato: gemini://host/path\r\n
+        request = f"{url}\r\n"
+        secure_sock.sendall(request.encode('utf-8'))
+        
+        # Leer respuesta
+        response = b''
+        while True:
+            chunk = secure_sock.recv(4096)
+            if not chunk:
+                break
+            response += chunk
+        
+        # Decodificar respuesta
+        response_text = response.decode('utf-8', errors='replace')
+        
+        # Parsear primera línea (header)
+        lines = response_text.split('\r\n', 1)
+        header = lines[0]
+        content = lines[1] if len(lines) > 1 else ''
+        
+        # Extraer código de estado y meta
+        parts = header.split(' ', 1)
+        status_code = parts[0]
+        meta = parts[1] if len(parts) > 1 else ''
+        
+        return status_code, meta, content
+        
+    finally:
+        secure_sock.close()
+
+
+def display_response(status_code, meta, content):
+    """
+    Muestra la respuesta de manera legible.
+    
+    Args:
+        status_code: Código de estado (ej: "20")
+        meta: Meta información (ej: "text/gemini")
+        content: Contenido de la respuesta
+    """
+    print(f"Estado: {status_code}")
+    print(f"Meta: {meta}")
+    print("-" * 60)
+    
+    # Interpretar código de estado
+    status_category = status_code[0] if status_code else '0'
+    
+    if status_category == '1':
+        print(f"INPUT REQUERIDO: {meta}")
+    elif status_category == '2':
+        print("ÉXITO")
+        print()
+        print(content)
+    elif status_category == '3':
+        print(f"REDIRECCIÓN A: {meta}")
+    elif status_category == '4':
+        print(f"ERROR TEMPORAL: {meta}")
+    elif status_category == '5':
+        print(f"ERROR PERMANENTE: {meta}")
+    elif status_category == '6':
+        print(f"CERTIFICADO DE CLIENTE REQUERIDO: {meta}")
+    else:
+        print("CÓDIGO DE ESTADO DESCONOCIDO")
+
+
+def main():
+    """Función principal del cliente."""
+    if len(sys.argv) != 2:
+        print("Uso: python3 ejemplo_cliente.py <url>")
+        print("Ejemplo: python3 ejemplo_cliente.py gemini://localhost:1965/")
+        sys.exit(1)
+    
+    url = sys.argv[1]
+    
+    try:
+        print(f"Conectando a: {url}")
+        print()
+        
+        status_code, meta, content = fetch_gemini(url, verify_ssl=False)
+        display_response(status_code, meta, content)
+        
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()
+
+
+# EJEMPLO DE USO:
+# ===============
+#
+# 1. Guardar este archivo como gemini_client.py
+#
+# 2. Ejecutar contra servidor local:
+#    python3 gemini_client.py gemini://localhost:1965/
+#
+# 3. Ejecutar contra servidor remoto:
+#    python3 gemini_client.py gemini://gemini.circumlunar.space/
+#
+# NOTAS:
+# ======
+#
+# - Este es un cliente básico para demostración
+# - No maneja todos los casos de error
+# - No implementa TOFU (Trust On First Use)
+# - No soporta redirecciones automáticas
+# - No maneja certificados de cliente
+#
+# Para un cliente completo, considera usar bibliotecas existentes
+# o clientes establecidos como Amfora, Lagrange, etc.

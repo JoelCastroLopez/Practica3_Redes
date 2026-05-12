@@ -1,0 +1,39 @@
+# Bienvenido al Servidor Gemini de Demostración
+
+Este es un servidor Gemini de ejemplo para demostrar el protocolo moderno de Internet.
+
+## ¿Qué es Gemini?
+
+Gemini es un protocolo de Internet diseñado en 2019 como un punto medio entre Gopher y HTTP. Es más ligero que la Web moderna pero más capaz que Gopher.
+
+## Características principales:
+
+* Navegación basada en URLs
+* Protocolo simple basado en texto
+* Soporte para diferentes tipos MIME
+* Formato de texto nativo: Gemtext (.gmi)
+* Diseñado para privacidad y simplicidad
+
+## Contenido de este servidor:
+
+=> /docs/historia.gmi Historia del protocolo Gemini
+=> /docs/protocolo.gmi Especificación técnica
+=> /docs/clientes.gmi Clientes Gemini disponibles
+=> /docs/ejemplo_cliente.txt Código de ejemplo en Python
+
+## Archivos de ejemplo:
+
+=> /index.html Página HTML de demostración
+=> /gemini_spec.pdf Especificación en PDF
+=> /images/gemini_logo.png Logo de Gemini
+
+## Formato Gemtext
+
+Este archivo está escrito en Gemtext, el formato nativo de Gemini. Es simple y legible:
+
+* Las líneas que empiezan con # son encabezados
+* Las líneas que empiezan con => son enlaces
+* Las líneas que empiezan con * son elementos de lista
+* El texto normal es simplemente texto
+
+¡Disfruta explorando este servidor Gemini!

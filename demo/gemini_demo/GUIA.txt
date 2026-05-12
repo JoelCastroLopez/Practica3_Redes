@@ -1,0 +1,173 @@
+Guía de Uso del Servidor Gemini de Demostración
+===============================================
+
+CONTENIDO DEL SERVIDOR:
+----------------------
+Este servidor de demostración contiene:
+
+/README.gmi              - Bienvenida e introducción (formato Gemtext)
+/docs/historia.gmi       - Historia del protocolo Gemini
+/docs/protocolo.gmi      - Especificación técnica del protocolo
+/docs/clientes.gmi       - Información sobre clientes Gemini
+/docs/ejemplo_cliente.txt - Código de ejemplo en Python
+/index.html              - Página HTML de demostración
+/gemini_spec.pdf         - Especificación en PDF (archivo binario)
+/images/gemini_logo.png  - Logo de Gemini (imagen)
+
+CÓMO INICIAR EL SERVIDOR:
+-------------------------
+1. Asegúrate de que el servidor esté compilado:
+   cd protocol_server_cpp/cmake-build-debug
+   cmake ..
+   make
+
+2. Ejecuta el servidor Gemini:
+   cd demo/gemini_demo
+   ../../protocol_server_cpp/cmake-build-debug/protocol_server gemini 1965
+
+   Nota: El puerto por defecto de Gemini es 1965
+
+CÓMO PROBAR CON CLIENTES GEMINI:
+--------------------------------
+Existen varios clientes Gemini disponibles:
+
+1. Lagrange (GUI, multiplataforma):
+   - Descarga: https://gmi.skyjake.fi/lagrange/
+   - Uso: lagrange gemini://localhost:1965
+
+2. Amfora (Terminal):
+   - Instalación: go install github.com/makeworld-the-better-one/amfora@latest
+   - Uso: amfora gemini://localhost:1965
+
+3. Bombadillo (Terminal):
+   - Instalación: go install tildegit.org/sloum/bombadillo@latest
+   - Uso: bombadillo gemini://localhost:1965
+
+4. Kristall (GUI):
+   - Descarga: https://github.com/MasterQ32/kristall
+   - Uso: kristall gemini://localhost:1965
+
+PRUEBAS MANUALES CON NETCAT:
+----------------------------
+También puedes probar con herramientas de línea de comandos:
+
+1. Ver la página principal:
+   echo -e "gemini://localhost/\r" | nc localhost 1965
+
+2. Ver un archivo específico:
+   echo -e "gemini://localhost/README.gmi\r" | nc localhost 1965
+
+3. Ver documentación:
+   echo -e "gemini://localhost/docs/historia.gmi\r" | nc localhost 1965
+
+4. Descargar archivo binario (PDF):
+   echo -e "gemini://localhost/gemini_spec.pdf\r" | nc localhost 1965 > /tmp/gemini_spec.pdf
+
+5. Descargar imagen:
+   echo -e "gemini://localhost/images/gemini_logo.png\r" | nc localhost 1965 > /tmp/gemini_logo.png
+
+FORMATO DE SOLICITUD GEMINI:
+----------------------------
+Las solicitudes Gemini son URLs completas seguidas de CR+LF:
+
+gemini://hostname:port/path/to/resource\r\n
+
+Ejemplos:
+- gemini://localhost/\r\n
+- gemini://localhost/README.gmi\r\n
+- gemini://localhost:1965/docs/historia.gmi\r\n
+
+FORMATO DE RESPUESTA GEMINI:
+----------------------------
+Las respuestas Gemini comienzan con un código de estado de dos dígitos
+seguido de un meta string (generalmente el tipo MIME), luego CR+LF:
+
+<código> <meta>\r\n
+<contenido>
+
+Códigos de estado comunes:
+20 = Éxito (seguido del tipo MIME)
+40 = Error temporal
+41 = Servidor no disponible
+42 = Error CGI
+43 = Error de proxy
+44 = Respuesta lenta
+50 = Error permanente
+51 = No encontrado
+52 = Desaparecido
+53 = Solicitud de proxy rechazada
+59 = Solicitud incorrecta
+60 = Se requiere certificado de cliente
+61 = Certificado no autorizado
+62 = Certificado no válido
+
+Ejemplo de respuesta exitosa:
+20 text/gemini\r\n
+# Bienvenido a Gemini\n
+Este es contenido en formato Gemtext.\n
+
+TIPOS MIME SOPORTADOS:
+---------------------
+- text/gemini     - Archivos Gemtext (.gmi)
+- text/plain      - Archivos de texto (.txt)
+- text/html       - Páginas HTML (.html)
+- image/png       - Imágenes PNG (.png)
+- image/jpeg      - Imágenes JPEG (.jpg, .jpeg)
+- image/gif       - Imágenes GIF (.gif)
+- application/pdf - Documentos PDF (.pdf)
+
+FORMATO GEMTEXT:
+---------------
+Gemtext es el formato de hipertexto nativo de Gemini. Es orientado a líneas:
+
+# Encabezado nivel 1
+## Encabezado nivel 2
+### Encabezado nivel 3
+
+=> URL Texto del enlace
+=> /ruta/local Enlace local
+=> gemini://ejemplo.com Enlace externo
+
+* Elemento de lista
+* Otro elemento
+
+> Línea de cita
+
+``` Bloque de código preformateado
+código aquí
+```
+
+Texto normal es simplemente texto.
+
+SOLUCIÓN DE PROBLEMAS:
+---------------------
+Si el servidor no inicia:
+- Verifica que el puerto 1965 no esté en uso
+- Comprueba que el ejecutable existe
+- Revisa los permisos del directorio
+
+Si el cliente no se conecta:
+- Verifica que el servidor esté corriendo
+- Prueba con: nc localhost 1965 (debería conectar)
+- Comprueba el firewall
+
+Si recibes error 51 (No encontrado):
+- Verifica que la ruta del archivo sea correcta
+- Asegúrate de que el archivo existe en el directorio del servidor
+- Recuerda que las rutas son relativas al directorio del servidor
+
+RECURSOS ADICIONALES:
+--------------------
+- Especificación Gemini: gemini://gemini.circumlunar.space/docs/specification.gmi
+- Gemini en Wikipedia: https://en.wikipedia.org/wiki/Gemini_(protocol)
+- Proyecto Gemini: https://gemini.circumlunar.space/
+- Lista de clientes: https://gemini.circumlunar.space/clients.html
+- Lista de servidores: https://gemini.circumlunar.space/servers.html
+
+DIFERENCIAS CON GOPHER:
+----------------------
+- Gemini usa URLs completas en las solicitudes (Gopher usa solo rutas)
+- Gemini incluye códigos de estado en las respuestas (Gopher no)
+- Gemini especifica tipos MIME explícitamente (Gopher usa tipos de un carácter)
+- Gemini está diseñado para TLS (Gopher no)
+- Gemtext es más estructurado que el texto plano de Gopher

@@ -1,0 +1,215 @@
+# Especificación Técnica del Protocolo Gemini
+
+## Resumen
+
+Gemini es un protocolo de capa de aplicación para la distribución de documentos de hipertexto. Está diseñado para ser más pesado que Gopher pero más ligero que HTTP.
+
+## Características Principales
+
+* Basado en URLs completas
+* Respuestas con códigos de estado
+* Soporte para tipos MIME
+* TLS obligatorio en producción
+* Sin negociación de contenido
+* Sin cookies ni estado de sesión
+
+## Formato de Solicitud
+
+Una solicitud Gemini consiste en una URL completa seguida de CR+LF:
+
+```
+<URL>\r\n
+```
+
+### Ejemplos de Solicitudes
+
+```
+gemini://ejemplo.com/\r\n
+gemini://ejemplo.com/docs/archivo.gmi\r\n
+gemini://ejemplo.com:1965/ruta/recurso\r\n
+```
+
+### Requisitos de la URL
+
+* DEBE comenzar con "gemini://"
+* DEBE incluir un nombre de host
+* PUEDE incluir un puerto (por defecto: 1965)
+* PUEDE incluir una ruta (por defecto: /)
+* NO debe exceder 1024 bytes
+* DEBE usar codificación UTF-8
+
+## Formato de Respuesta
+
+Una respuesta Gemini consiste en:
+
+```
+<CÓDIGO><ESPACIO><META>\r\n
+<CONTENIDO>
+```
+
+### Estructura
+
+1. **Código de estado**: Dos dígitos (10-69)
+2. **Espacio**: Un carácter de espacio
+3. **Meta**: String de metadatos (tipo MIME para código 20)
+4. **CR+LF**: Terminador de línea
+5. **Contenido**: Datos del recurso (solo para código 20)
+
+### Ejemplo de Respuesta Exitosa
+
+```
+20 text/gemini\r\n
+# Bienvenido\n
+Este es contenido Gemtext.\n
+```
+
+## Códigos de Estado
+
+### 1x - INPUT
+* **10**: INPUT - Se requiere entrada del usuario
+* **11**: SENSITIVE INPUT - Entrada sensible (contraseña)
+
+### 2x - SUCCESS
+* **20**: SUCCESS - Solicitud exitosa, contenido sigue
+
+### 3x - REDIRECT
+* **30**: REDIRECT - TEMPORARY - Redirección temporal
+* **31**: REDIRECT - PERMANENT - Redirección permanente
+
+### 4x - TEMPORARY FAILURE
+* **40**: TEMPORARY FAILURE - Fallo temporal genérico
+* **41**: SERVER UNAVAILABLE - Servidor no disponible
+* **42**: CGI ERROR - Error en script CGI
+* **43**: PROXY ERROR - Error de proxy
+* **44**: SLOW DOWN - Cliente debe reducir velocidad
+
+### 5x - PERMANENT FAILURE
+* **50**: PERMANENT FAILURE - Fallo permanente genérico
+* **51**: NOT FOUND - Recurso no encontrado
+* **52**: GONE - Recurso eliminado permanentemente
+* **53**: PROXY REQUEST REFUSED - Solicitud de proxy rechazada
+* **59**: BAD REQUEST - Solicitud malformada
+
+### 6x - CLIENT CERTIFICATE REQUIRED
+* **60**: CLIENT CERTIFICATE REQUIRED - Se requiere certificado
+* **61**: CERTIFICATE NOT AUTHORISED - Certificado no autorizado
+* **62**: CERTIFICATE NOT VALID - Certificado no válido
+
+## Tipos MIME Comunes
+
+* **text/gemini** - Formato Gemtext nativo
+* **text/plain** - Texto plano
+* **text/html** - HTML (no recomendado)
+* **image/png** - Imágenes PNG
+* **image/jpeg** - Imágenes JPEG
+* **image/gif** - Imágenes GIF
+* **application/pdf** - Documentos PDF
+* **audio/mpeg** - Audio MP3
+* **video/mp4** - Video MP4
+
+## Formato Gemtext
+
+Gemtext es el formato de marcado nativo de Gemini. Es orientado a líneas:
+
+### Tipos de Línea
+
+```
+# Encabezado nivel 1
+## Encabezado nivel 2
+### Encabezado nivel 3
+
+=> URL Texto del enlace
+
+* Elemento de lista
+
+> Línea de cita
+
+``` Inicio/fin de bloque preformateado
+código o texto preformateado
+```
+
+Texto normal
+```
+
+### Reglas de Gemtext
+
+* Una línea = un elemento
+* Sin formato en línea (negrita, cursiva, etc.)
+* Enlaces en líneas separadas
+* Bloques de código delimitados por ```
+* Máxima simplicidad y legibilidad
+
+## Conexión y Transporte
+
+### Puerto por Defecto
+* **1965** (año de nacimiento de Gemini, la misión espacial)
+
+### TLS
+* **Obligatorio** en producción
+* **Opcional** en desarrollo/pruebas
+* Versión mínima: TLS 1.2
+* Se recomienda TLS 1.3
+
+### Certificados
+* Pueden ser autofirmados
+* TOFU (Trust On First Use) es común
+* Validación de nombre de host opcional
+
+## Limitaciones del Protocolo
+
+* **Tamaño máximo de URL**: 1024 bytes
+* **Tamaño máximo de meta**: 1024 bytes
+* **Sin fragmentación**: Respuesta completa en una conexión
+* **Sin streaming**: Contenido completo antes de cerrar
+* **Sin compresión**: A nivel de protocolo
+* **Sin negociación**: Un recurso = un tipo MIME
+
+## Diferencias con HTTP
+
+### Más Simple
+* Sin métodos (GET, POST, etc.)
+* Sin headers complejos
+* Sin cookies
+* Sin estado de sesión
+* Sin negociación de contenido
+
+### Más Seguro
+* TLS obligatorio
+* Sin JavaScript
+* Sin rastreo incorporado
+* Privacidad por diseño
+
+### Más Limitado
+* Solo lectura (sin POST)
+* Sin contenido dinámico del lado del cliente
+* Sin multimedia compleja
+* Sin aplicaciones web
+
+## Implementación
+
+### Servidor Básico
+
+1. Escuchar en puerto 1965
+2. Aceptar conexión TLS
+3. Leer URL (hasta \r\n)
+4. Validar URL
+5. Procesar solicitud
+6. Enviar código de estado + meta
+7. Enviar contenido (si código 20)
+8. Cerrar conexión
+
+### Cliente Básico
+
+1. Conectar a host:puerto
+2. Establecer TLS
+3. Enviar URL + \r\n
+4. Leer código de estado + meta
+5. Procesar según código
+6. Leer contenido (si código 20)
+7. Renderizar/mostrar
+8. Cerrar conexión
+
+## Recursos
+
+=> gemini://gemini.circumlunar.space/docs/specification.gmi Especificación oficial completa
+=> gemini://gemini.circumlunar.space/ Proyecto Gemini
