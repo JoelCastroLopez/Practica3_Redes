@@ -2,15 +2,14 @@
 #include <cstdlib>
 #include <string>
 #include <stdexcept>
-#include <filesystem>
-#include <algorithm>
+#include <climits>      // PATH_MAX
+
+#include <unistd.h>     // realpath
+#include <sys/stat.h>   // stat
 
 #include "GopherServer.h"
 #include "GeminiServer.h"
 
-namespace fs = std::filesystem;
-
-// Comprobación de argumentos correctos
 static void usage(const char* prog) {
     fprintf(stderr,
         "Uso:\n"
@@ -24,7 +23,20 @@ static void usage(const char* prog) {
     exit(1);
 }
 
-// Función main, que también se encarga de cortar la línea de argumentos y hacer funcionar el código con el protocolo seleccionado
+// Comprueba si una ruta es un directorio válido (sustituye a fs::is_directory)
+static bool is_directory(const std::string& path) {
+    struct stat st;
+    return stat(path.c_str(), &st) == 0 && S_ISDIR(st.st_mode);
+}
+
+// Convierte a ruta absoluta (sustituye a fs::absolute)
+static std::string absolute_path(const std::string& path) {
+    char resolved[PATH_MAX];
+    if (realpath(path.c_str(), resolved) == nullptr)
+        return path;   // si falla devuelve la original
+    return std::string(resolved);
+}
+
 int main(int argc, char* argv[]) {
     if (argc < 2) usage(argv[0]);
 
@@ -42,17 +54,11 @@ int main(int argc, char* argv[]) {
         usage(argv[0]);
     }
 
-    // Convertir a ruta absoluta
-    root = fs::absolute(root).string();
+    root = absolute_path(root);
 
-    if (!fs::is_directory(root)) {
+    if (!is_directory(root)) {
         fprintf(stderr, "ERROR: '%s' no es un directorio valido\n", root.c_str());
         return 1;
-    }
-
-    bool use_tls = false;
-    for (int i = 1; i < argc; i++) {
-        if (std::string(argv[i]) == "--tls") use_tls = true;
     }
 
     try {
@@ -60,7 +66,7 @@ int main(int argc, char* argv[]) {
             GopherServer server(port, root);
             server.run();
         } else {
-            GeminiServer server(port, root, use_tls);  // añadir use_tls
+            GeminiServer server(port, root);
             server.run();
         }
     } catch (const std::exception& e) {
