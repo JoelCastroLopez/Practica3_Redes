@@ -104,28 +104,28 @@ GeminiConnection::~GeminiConnection() {
 // Maximum URL size is MAX_URL_SIZE (1024 bytes)
 // Returns the URL string (without CR+LF)
 std::string GeminiConnection::read_url() {
-    char buf[MAX_URL_SIZE + 2];
-    int total = 0;
+    std::string url;
+    url.reserve(MAX_URL_SIZE + 2);
+    int bytes_read = 0;
+    const int MAX_TOTAL_READ = MAX_URL_SIZE * 4;  // límite de seguridad
 
-    // TODO: Read from socket_fd until \r\n is found
-    // Uses SSL_read when TLS is active, recv otherwise
-    while (total < MAX_URL_SIZE) {
+    // Leer byte a byte hasta '\n' o cierre de conexión.
+    // Seguimos consumiendo bytes aunque ya estemos sobre el límite para drenar el buffer del socket y evitar RST al cerrar.
+    while (bytes_read < MAX_TOTAL_READ) {
         char c;
         int n = ssl_recv(tls_context, socket_fd, &c, 1);
-        if (n <= 0) break;      // error or connection closed
-        if (c == '\n') break;   // end of URL line
-        buf[total++] = c;
+        if (n <= 0) break;
+        bytes_read++;
+        if (c == '\n') break;
+        // Almacenamos hasta MAX_URL_SIZE+1 caracteres
+        if (url.length() <= MAX_URL_SIZE)
+            url += c;
     }
 
-    // TODO: Return the URL string (without \r\n)
-    // Strip trailing \r if present
-    if (total > 0 && buf[total - 1] == '\r')
-        total--;
+    if (!url.empty() && url.back() == '\r')
+        url.pop_back();
 
-    // TODO: Validate URL length (must be <= 1024 bytes)
-    // TODO: Handle errors and buffer overflow
-    // If total == MAX_URL_SIZE the URL was truncated; handle_request() checks the length
-    return std::string(buf, total);
+    return url;
 }
 
 // TODO: Students must implement this function
@@ -256,28 +256,22 @@ std::string GeminiConnection::path_to_url(const std::string& path) {
 
 // Main request handler
 void GeminiConnection::handle_request() {
-    // Read the URL from the client
     std::string url = read_url();
-    
-    // Check URL length (Gemini spec: max 1024 bytes)
+
     if (url.length() > MAX_URL_SIZE) {
         send_header(GeminiStatus::BAD_REQUEST, "URL too long");
         return;
     }
-    
-    // Parse the URL to get the path
+
     std::string path = parse_url_path(url);
-    
-    // Validate the path
-    if (!is_safe_path(path)) {
+
+    if (path.empty() || !is_safe_path(path)) {
         send_header(GeminiStatus::BAD_REQUEST, "Invalid path");
         return;
     }
-    
-    // Convert to filesystem path (prepend current directory)
+
     std::string fs_path = "." + path;
-    
-    // Check if path exists and determine type
+
     if (is_directory(fs_path)) {
         send_directory(fs_path);
     } else if (is_regular_file(fs_path)) {
